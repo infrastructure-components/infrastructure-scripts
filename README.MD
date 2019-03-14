@@ -13,3 +13,7 @@ Rather than cmd, we use the webpack node api.
 # Typescript
 
 - Write Library Project in Typescript: see: https://codeburst.io/https-chidume-nnamdi-com-npm-module-in-typescript-12b3b22f0724
+
+# Dependencies
+
+- npm i -g serverless
