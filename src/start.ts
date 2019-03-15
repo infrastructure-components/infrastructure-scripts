@@ -3,7 +3,116 @@
  * the environment variables or 3000 (default)
  */
 
+
 import { loadConfiguration, startDevServer } from './libs';
+import { ConfigTypes } from './config';
+import { YamlEditor } from './yaml-edit';
+
+
+import { promisify } from './libs';
+
+const SERVERLESS_YML = `service:
+
+plugins:
+  # allows running the stack locally on the dev-machine
+  - serverless-offline
+  
+# the custom section
+custom:
+  # allows accessing the offline backend when using Docker
+  serverless-offline:
+    host: 0.0.0.0
+    port: \${env:PORT}
+
+package:
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  
+functions:
+
+resources:
+
+`;
+
+export function existsSlsYml () {
+    const fs = require("fs");
+
+    try {
+        fs.statSync('serverless.yml');
+    } catch (error){
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * convert json to yml: https://www.npmjs.com/package/json-to-pretty-yaml
+ * 
+ * @param ssrConfigPath path to a module that exports [[ServerSideRenderingConfig]]
+ */
+export async function startSlsOffline (slsConfig: any) {
+
+    //const webpackConfig = await loadConfiguration(configFilePath);
+
+    // create a serverless.yml in the root directory
+
+    const fs = require("fs");
+    const ymlExists = await existsSlsYml();
+    /*if (ymlExists) {
+        console.error("serverless.yml already exists. This file would be overwritten! Please remove it before proceeding.");
+        return;
+    }*/
+
+    const cmd = require('node-cmd');
+    let yamlEdit = YamlEditor(SERVERLESS_YML);
+
+    // add the
+    Object.keys(slsConfig).forEach(key => {
+        console.log (key);
+        yamlEdit.insertChild(key, slsConfig[key]);
+    });
+
+    let yamlString = yamlEdit.dump();
+
+    console.log(yamlString);
+
+    await fs.writeFile('serverless.yml', yamlString, function (err) {
+        if (err) throw err;
+        console.log('serverless.yml created...');
+    });
+
+
+    await new Promise((resolve, reject) => {
+        let data_line = '';
+        const processRef = cmd.get(`sls offline start`);
+        processRef.stdout.on(
+            'data',
+            async function(data) {
+                data_line += data;
+                if (data_line[data_line.length-1] == '\n') {
+                    console.log(data_line);
+
+
+
+                    /*if (data_line.indexOf("Serverless: Offline listening") >= 0 && await existsSlsYml()) {
+                        fs.unlink('serverless.yml', function (err) {
+                            if (err) throw err;
+                            console.log('serverless.yml removed...');
+                        });
+
+                    }*/
+
+                }
+            }
+        );
+
+    });
+
+}
+
 
 /**
  *
@@ -11,15 +120,21 @@ import { loadConfiguration, startDevServer } from './libs';
  */
 export async function start (configFilePath: string) {
 
-    const webpackConfig = await loadConfiguration(configFilePath);
+    const config = await loadConfiguration(configFilePath);
 
     // when we have a browser app, we start it directly
-
-    if (webpackConfig.target == undefined || webpackConfig.target === "web") {
-        startDevServer(webpackConfig)
+    if (config.type === ConfigTypes.SPA && (config.webpackConfig.target == undefined || config.webpackConfig.target === "web")) {
+        
+        console.log("start spa locally");
+        startDevServer(config.webpackConfig);
+        
+    } else if (config.type === ConfigTypes.SSR && config.webpackConfig.target === "node" && config.slsConfig !== undefined) {
+        
+        console.log("start ssr locally/offline");
+        startSlsOffline(config.slsConfig);
+        
     } else {
-        // TODO implement starting a server application!
-        console.error("TODO implement starting a server application!")
+        console.error("Cannot start a server application - please use command 'offline' and provide a serverless-configuration!")
     }
 
 

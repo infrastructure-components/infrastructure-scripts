@@ -17,3 +17,5 @@ Rather than cmd, we use the webpack node api.
 # Dependencies
 
 - npm i -g serverless
+- npm install --save-dev serverless-offline
+- npm install --save-dev serverless-http

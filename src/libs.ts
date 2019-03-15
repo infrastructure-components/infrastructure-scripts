@@ -63,53 +63,56 @@ export async function loadConfiguration (configFilePath: string) {
         return;
     }
 
-    const configStr = await promisify(callback => cmd.get(`node -e "console.log(eval(require(\\\"./${configFilePath}\\\")))"`, callback))
+    const configStr = await promisify(callback => cmd.get(`node -e "console.log(JSON.stringify(eval(require(\\\"./${configFilePath}\\\"))))"`, callback))
         .then((data) => data)
         .catch(err => {
             console.log("err: ", err);
             return undefined;
         });
 
-    //console.log("config: ",config);
+    console.log("configStr: ", configStr);
+
 
     var config = undefined;
     eval('config=' + configStr);
 
-    console.log("config: ", config);
+    console.log("config: ",config);
 
-    if (config !== undefined) {
+    if (config !== undefined && config.webpackConfig !== undefined) {
+        
+        const webpackConfig = config.webpackConfig;
         /**
          * the webpack-configuration depends on the target
          * see: https://webpack.js.org/configuration/target/
          *
          * the default is "web" (browser-environment)
          */
-        const target = config.target !== undefined ? config.target : "web";
+        const target = webpackConfig.target !== undefined ? webpackConfig.target : "web";
         console.log("loading configuration for environment: ", target);
 
-        config.mode = "development";
+        webpackConfig.mode = "development";
 
-        config.devtool = 'source-map';
-        config.resolve = {
+        webpackConfig.devtool = 'source-map';
+        webpackConfig.resolve = {
             extensions: ['.js', '.jsx', '.ts', '.tsx', "mjs"]
         };
 
-        config.optimization = {
+        webpackConfig.optimization = {
             // We no not want to minimize our code.
             minimize: false
         };
 
-        config.performance = {
+        webpackConfig.performance = {
             // Turn off size warnings for entry points
             hints: false
         };
 
         if (target === "node") {
-            config.externals = [require("webpack-node-externals")()];
+            webpackConfig.externals = [require("webpack-node-externals")()];
         }
 
 
-        config.module = {
+        webpackConfig.module = {
             rules: [
                 {
                     // fixes https://github.com/graphql/graphql-js/issues/1272
@@ -138,7 +141,7 @@ export async function loadConfiguration (configFilePath: string) {
                                  * the @babel/env loader requires deactivated modules for async function support
                                  * see: https://github.com/babel/babel/issues/5085
                                  */
-                                [require.resolve("@babel/preset-env"), {"modules": target !== "web"}],
+                                [require.resolve("@babel/preset-env"), target !== "web" ? {"modules": false} : {}],
                                 require.resolve('@babel/preset-react')
                             ],
                             plugins: [
@@ -201,10 +204,25 @@ export function startDevServer(webpackConfig: any) {
      * we use the `STAGE_PATH` from the environment to specify the url
 
      publicPath: "/"+require('./src/config/route').pathToAssets()
+     
+
+
+    entry: {
+        app: ['./src/client/index.tsx']
+    },
+    output: {
+        path: path.resolve(__dirname, 'build', 'client'),
+            filename: '[name].bundle.js'
+     publicPath: "/"+require('./src/config/route').pathToAssets()
+    },
      */
 
+    const bundlePath = path.join(
+        webpackConfig.output.publicPath !== undefined ? webpackConfig.output.publicPath : "",
+        webpackConfig.output.filename.replace("[name]", Object.keys(webpackConfig.entry))
+    );
 
-    const bundlePath = path.join("js", "app.bundle.js");
+    //const bundlePath = path.join("js", "app.bundle.js");
     console.log("path: ", bundlePath);
     // serve a basic html with the app.bundle.js
     app.get('/', (req, res) => {
@@ -233,10 +251,23 @@ export function startDevServer(webpackConfig: any) {
 
     // this path directs to the output of the client, as defined in `webpack.config.client.js`
     // TODO make the dir dynamic
-    app.use(express.static(path.resolve(__dirname, 'dist', 'js')));
+    app.use(express.static(webpackConfig.output.path));
 
 
     app.listen(port, () => {
         console.log(`App is listening on port ${port}`)
     });
+}
+
+export async function startOfflineStack(webpackConfig: any) {
+
+    const cmd = require('node-cmd');
+
+    // TODO build the client projects
+
+    // TODO create a serverless.yml
+
+    await cmd.run(`sls offline start`);
+
+
 }
