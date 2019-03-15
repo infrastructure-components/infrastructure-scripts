@@ -1,7 +1,21 @@
 
 export const ConfigTypes = {
-    SSR:'SSR',
-    SPA:'SPA'
+    /**
+     * The Low-Level Server accepts basic webpack- and sls- configs
+     * It does not take care of ensuring that anything fits together
+     */
+    LOWLEVEL_SERVER:'LOWLEVEL_SERVER',
+
+    /**
+     * The low-level SPA accepts a basic webpack configuration
+     */
+    LOWLEVEL_SPA:'LOWLEVEL_SPA',
+
+    /**
+     * The higher level API to build/start a SSR app
+     */
+    SSR:'SSR'
+
 };
 
 /**
@@ -23,4 +37,4 @@ export interface Config {
      * the serverless.yml specification as js-object
      */
     slsConfig: any
-}
+};

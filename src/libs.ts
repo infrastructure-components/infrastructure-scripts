@@ -78,9 +78,12 @@ export async function loadConfiguration (configFilePath: string) {
 
     console.log("config: ",config);
 
-    if (config !== undefined && config.webpackConfig !== undefined) {
-        
-        const webpackConfig = config.webpackConfig;
+    return config;
+};
+
+export function complementWebpackConfig(webpackConfig: any) {
+    if (webpackConfig !== undefined) {
+
         /**
          * the webpack-configuration depends on the target
          * see: https://webpack.js.org/configuration/target/
@@ -180,8 +183,8 @@ export async function loadConfiguration (configFilePath: string) {
         return undefined;
     }
 
-    return config;
-};
+    return webpackConfig;
+}
 
 export function startDevServer(webpackConfig: any) {
     const path = require('path');

@@ -4,7 +4,7 @@
  */
 
 
-import { loadConfiguration, startDevServer } from './libs';
+import { loadConfiguration, complementWebpackConfig, startDevServer } from './libs';
 import { ConfigTypes } from './config';
 import { YamlEditor } from './yaml-edit';
 
@@ -95,8 +95,6 @@ export async function startSlsOffline (slsConfig: any) {
                 if (data_line[data_line.length-1] == '\n') {
                     console.log(data_line);
 
-
-
                     /*if (data_line.indexOf("Serverless: Offline listening") >= 0 && await existsSlsYml()) {
                         fs.unlink('serverless.yml', function (err) {
                             if (err) throw err;
@@ -123,18 +121,18 @@ export async function start (configFilePath: string) {
     const config = await loadConfiguration(configFilePath);
 
     // when we have a browser app, we start it directly
-    if (config.type === ConfigTypes.SPA && (config.webpackConfig.target == undefined || config.webpackConfig.target === "web")) {
+    if (config.type === ConfigTypes.LOWLEVEL_SPA && config.webpackConfig !== undefined) {
         
         console.log("start spa locally");
-        startDevServer(config.webpackConfig);
+        startDevServer(complementWebpackConfig(config.webpackConfig));
         
-    } else if (config.type === ConfigTypes.SSR && config.webpackConfig.target === "node" && config.slsConfig !== undefined) {
+    } else if (config.type === ConfigTypes.LOWLEVEL_SERVER && config.slsConfig !== undefined) {
         
         console.log("start ssr locally/offline");
         startSlsOffline(config.slsConfig);
         
     } else {
-        console.error("Cannot start a server application - please use command 'offline' and provide a serverless-configuration!")
+        console.error("Cannot start the provided configuration!")
     }
 
 
