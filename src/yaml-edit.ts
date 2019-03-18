@@ -51,6 +51,53 @@ export const YamlEditor = (input) => {
 
         if (typeof doc === "string") {
             lines.push(indent + doc);
+        } else if (isArray && keys.length > 1) {
+            // when we are in an array and the object has more than one key
+
+            keys.map((k, idx) => {
+                let val = doc[k];
+
+                if (idx == 0) {
+                    if (typeof(val) != 'object') {
+                        lines.push(indent + k + ': ' + val);
+                    } else {
+                        lines.push(indent + k + ':');
+
+
+                        if (Array.isArray(val)) {
+                            val.map((arrItem, idx2) => {
+                                console.log("item: ", arrItem);
+                                let arrLines=generateSnippet(arrItem, indentLevel+2, true);
+                                lines = lines.concat(arrLines);
+                            });
+                        } else {
+                            lines = lines.concat(generateSnippet(val, indentLevel + 1, false));
+                        }
+                    }
+
+                } else {
+                    if (typeof(val) != 'object') {
+                        lines.push(' '.repeat(indentLevel * 2) + k + ': ' + val);
+                    } else {
+                        lines.push(' '.repeat(indentLevel * 2) + k + ':');
+                        //lines = lines.concat(generateSnippet(val, indentLevel + 1, false));
+
+                        if (Array.isArray(val)) {
+                            console.log("arr?: YES", val);
+                            val.map((arrItem, idx2) => {
+                                console.log("item: ", arrItem);
+                                let arrLines=generateSnippet(arrItem, indentLevel+2, true);
+                                lines = lines.concat(arrLines);
+                            });
+                        } else {
+                            lines = lines.concat(generateSnippet(val, indentLevel + 1, false));
+                        }
+                    }
+                }
+
+
+            });
+
         } else {
             keys.map((k, idx) => {
                 let val = doc[k];

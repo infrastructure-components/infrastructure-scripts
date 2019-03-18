@@ -8,32 +8,38 @@ import { loadConfiguration, complementWebpackConfig, startDevServer } from './li
 import { ConfigTypes } from './config';
 
 
-import { startSlsOffline } from './types/sls-config';
-import { startSsr } from './types/ssr-config';
+import { startSlsOffline, deploySls } from './types/sls-config';
+import { startSsr, deploySsr } from './types/ssr-config';
 
 /**
  *
  * @param configFilePath
  */
-export async function start (configFilePath: string) {
+export async function deploy (configFilePath: string) {
 
     const config = await loadConfiguration(configFilePath);
 
     // when we have a browser app, we start it directly
     if (config.type === ConfigTypes.LOWLEVEL_SPA && config.webpackConfig !== undefined) {
-        
-        console.log("start spa locally");
-        startDevServer(complementWebpackConfig(config.webpackConfig));
+
+
+        console.log("Deploy SPA!");
+        // TODO implement spa deployment to S3
+        console.error("Cannot start the provided configuration!")
         
     } else if (config.type === ConfigTypes.LOWLEVEL_SERVER && config.slsConfig !== undefined) {
-        
-        console.log("start llsrv locally/offline");
-        startSlsOffline(config.slsConfig, true);
-        
+
+        console.log("Deploy LowLevel SSR!");
+        deploySls(config.slsConfig, {
+            // for we do not have the assetsPath in a configuration, we fall back to environment variables!
+            assetsPath: "${ASSETSDIR}"
+        }, true);
+
+
     } else if (config.type === ConfigTypes.SSR && config.ssrConfig !== undefined) {
 
-        console.log("start ssr locally/offline");
-        startSsr(config.ssrConfig, true);
+        console.log("deploy ssr");
+        deploySsr(config.ssrConfig, true);
 
     } else {
         console.error("Cannot start the provided configuration!")

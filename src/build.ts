@@ -1,5 +1,5 @@
 
-import { loadConfiguration, complementWebpackConfig, logWebpack } from './libs';
+import { loadConfiguration, complementWebpackConfig, runWebpack } from './libs';
 import { ConfigTypes } from './config';
 import { buildSsr } from './types/ssr-config';
 
@@ -16,8 +16,11 @@ export async function build (configFilePath: string) {
     // && scripts build webpack.config.server.js && cp -rf ./dist/js/ ./build/server/assets/
 
     if (config.type === ConfigTypes.LOWLEVEL_SPA || config.type === ConfigTypes.LOWLEVEL_SERVER ) {
-        await webpack(complementWebpackConfig(config.webpackConfig), logWebpack);
+
+        await runWebpack(complementWebpackConfig(config.webpackConfig));
+
     } else if (config.type === ConfigTypes.SSR && config.ssrConfig !== undefined) {
+
         const { ssrConfig } = config;
         await buildSsr(ssrConfig);
         

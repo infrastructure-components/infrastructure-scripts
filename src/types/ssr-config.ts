@@ -1,6 +1,7 @@
 
 import { AppConfig, toClientWebpackConfig, toServerWebpackConfig, getBuildPath } from './app-config';
-import { complementWebpackConfig, logWebpack, copyAssets } from '../libs';
+import {complementWebpackConfig, runWebpack, copyAssets, s3sync} from '../libs';
+import { toSlsConfig, startSlsOffline, deploySls } from './sls-config';
 
 
 /**
@@ -9,7 +10,14 @@ import { complementWebpackConfig, logWebpack, copyAssets } from '../libs';
 export interface SsrConfig {
 
     /**
-     * the path (from the main-project) to the build directory
+     * The name of the CloudFormation stack
+     * it is allowed to use env-variables, but don't forget to specify them
+     * e.g. "${env:CLOUDSTACKNAME}-${env:STAGE}"
+     */
+    stackName: string,
+
+    /**
+     * the **relative** path (from the main-project) to the build directory
      */
     buildPath: string,
 
@@ -29,11 +37,19 @@ export interface SsrConfig {
     serverConfig: AppConfig
 }
 
+export async function startSsr (ssrConfig: SsrConfig, keepSlsYaml: boolean) {
 
+    // prepare the sls-config
+    const slsConfig = toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath);
+
+    // start the sls-config
+    startSlsOffline(slsConfig, keepSlsYaml);
+
+}
 
 export async function buildSsr (ssrConfig: SsrConfig) {
 
-    const webpack = require('webpack');
+
     const fs = require('fs');
     const path = require('path');
     
@@ -44,20 +60,42 @@ export async function buildSsr (ssrConfig: SsrConfig) {
     const serverWpConfig = complementWebpackConfig(toServerWebpackConfig(ssrConfig.serverConfig, ssrConfig.buildPath))
 
     // build the clients
-    await Array.isArray(clientWpConfig) ? clientWpConfig.map(async c => await webpack(c, logWebpack)) :
-        await webpack(clientWpConfig, logWebpack);
+    await Array.isArray(clientWpConfig) ? clientWpConfig.map(async c => await runWebpack(c)) : await runWebpack(clientWpConfig)
+
 
     // build the server
-    await webpack(serverWpConfig, logWebpack);
+    await runWebpack(serverWpConfig);
 
-    const assetsPath = path.resolve(getBuildPath(ssrConfig.serverConfig, ssrConfig.buildPath), ssrConfig.assetsPath);
-    console.log("assetsPath: ", assetsPath)
+    var assetsPath = path.resolve(getBuildPath(ssrConfig.serverConfig, ssrConfig.buildPath), ssrConfig.assetsPath);
+    if (!assetsPath.endsWith("/")) {
+        assetsPath = assetsPath+"/";
+    }
+    console.log("assetsPath: ", assetsPath);
     
     // copy the client apps to the assets-folder
     Array.isArray(ssrConfig.clientConfig) ?
         ssrConfig.clientConfig.map(c => copyAssets(getBuildPath(c, ssrConfig.buildPath), assetsPath)) :
         await copyAssets(getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath), assetsPath);
 
+}
+
+export async function deploySsr (ssrConfig: SsrConfig, keepSlsYaml: boolean) {
+// prepare the sls-config
+    const slsConfig = toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath);
+
+
+    // start the sls-config
+    await deploySls(slsConfig, {
+        assetsPath: `"${ssrConfig.assetsPath}"`
+    }, keepSlsYaml);
+
+
+    // copy the client apps to the assets-folder
+    console.log("start S3 Sync");
+    Array.isArray(ssrConfig.clientConfig) ?
+        ssrConfig.clientConfig.map(async c => await s3sync(getBuildPath(c, ssrConfig.buildPath))) :
+        await s3sync(getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath));
+    console.log("S3 Sync completed");
 }
 
 /**
@@ -71,5 +109,4 @@ export const prepareClientConfig = (clientConfig: AppConfig | Array<AppConfig>, 
     return Array.isArray(clientConfig) ?
         clientConfig.map(c => complementWebpackConfig(toClientWebpackConfig(c, buildPath))) :
         complementWebpackConfig(toClientWebpackConfig(clientConfig, buildPath))
-}
-
+};

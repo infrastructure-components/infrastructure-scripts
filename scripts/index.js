@@ -35,7 +35,7 @@ const { loadEnv } = require('../dist/libs');
 // these are the commands that can be executed
 const { build } = require('../dist/build');
 const { start } = require('../dist/start');
-//const { deploy } = require('../dist/deploy');
+const { deploy } = require('../dist/deploy');
 
 if (args.length > 0) {
 

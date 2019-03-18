@@ -27,7 +27,7 @@ export async function loadEnv(env: string) {
         await cmd.run(`export $(grep -v '^#' ${env} | xargs) `);
 
         const dotenv = require('dotenv');
-        const result = dotenv.config();
+        const result = dotenv.config({ path: env });
         if (result.error) {
             throw result.error;
         }
@@ -41,6 +41,85 @@ export async function loadEnv(env: string) {
     return false;
 }
 
+/**
+ * Login to Severless framework
+ *
+ * Requires env-variables:
+ * - AWS_ACCESS_KEY_ID
+ * - AWS_SECRET_ACCESS_KEY
+ */
+export function slsLogin () {
+
+    require('child_process').exec(`sls config credentials -o --provider aws --key ${process.env.AWS_ACCESS_KEY_ID} --secret ${process.env.AWS_SECRET_ACCESS_KEY}`,
+        function(err, stdout, stderr) {
+            if (err) {
+                console.log(err);
+            }
+            console.log(stdout, stderr);
+        });
+
+};
+
+/**
+ * uploads the static assets (compiled client) to the S3-bucket of the current stage
+ * implements [[DeployStaticAssestsSpec]]
+ *
+ * uses: https://www.npmjs.com/package/s3-node-client
+ *
+ * Requires env-variables:
+ * - AWS_ACCESS_KEY_ID
+ * - AWS_SECRET_ACCESS_KEY
+ * - AWS_REGION
+ * - STATIC_ASSETS_BUCKET
+ * - STAGE
+ */
+export async function s3sync (srcFolder: string) {
+
+    return new Promise((resolve, reject) => {
+        var client = require('s3-node-client').createClient({
+            maxAsyncS3: 20,     // this is the default
+            s3RetryCount: 3,    // this is the default
+            s3RetryDelay: 1000, // this is the default
+            multipartUploadThreshold: 20971520, // this is the default (20 MB)
+            multipartUploadSize: 15728640, // this is the default (15 MB)
+            s3Options: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                region: process.env.AWS_REGION,
+                // endpoint: 's3.yourdomain.com',
+                // sslEnabled: false
+                // any other options are passed to new AWS.S3()
+                // See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#constructor-property
+            },
+        });
+
+        var params = {
+            localDir: srcFolder, //"./build/client",
+            deleteRemoved: false, // default false, whether to remove s3 objects that have no corresponding local file.
+            s3Params: {
+                // the bucket must match the name that is constructed in serverless.yml
+                Bucket: process.env.STATIC_ASSETS_BUCKET+"-"+process.env.STAGE,
+                //Prefix: "",
+                // other options supported by putObject, except Body and ContentLength.
+                // See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
+            },
+        };
+
+        var uploader = client.uploadDir(params);
+        uploader.on('error', function(err) {
+            console.error("unable to sync:", err.stack);
+            reject();
+        });
+        uploader.on('progress', function() {
+            console.log("progress", uploader.progressAmount, uploader.progressTotal);
+        });
+        uploader.on('end', function() {
+            console.log("done uploading");
+            resolve();
+        });
+    });
+
+}
 
 /**
  * Loads the configuration from the file-system (relative to the calling project)
@@ -144,7 +223,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                                  * the @babel/env loader requires deactivated modules for async function support
                                  * see: https://github.com/babel/babel/issues/5085
                                  */
-                                [require.resolve("@babel/preset-env"), target !== "web" ? {"modules": false} : {}],
+                                [require.resolve("@babel/preset-env"), target !== "web" ? {"modules": false, "targets": { "node": "8.10" }} : {}],
                                 require.resolve('@babel/preset-react')
                             ],
                             plugins: [
@@ -262,39 +341,35 @@ export function startDevServer(webpackConfig: any) {
     });
 }
 
-export async function startOfflineStack(webpackConfig: any) {
 
-    const cmd = require('node-cmd');
+export async function runWebpack (clientWpConfig) {
+    const webpack = require('webpack');
 
-    // TODO build the client projects
+    return new Promise(function(resolve, reject) {
+        webpack(clientWpConfig, (err, stats) => {
+            if (err) {
+                console.error(err.stack || err);
+                if (err.details) {
+                    console.error(err.details);
+                }
+                return;
+            }
 
-    // TODO create a serverless.yml
+            const info = stats.toJson();
 
-    await cmd.run(`sls offline start`);
+            if (stats.hasErrors()) {
+                console.error(info.errors);
+                reject();
+                return;
+            }
 
+            if (stats.hasWarnings()) {
+                console.warn(info.warnings);
+            }
 
-}
-
-export const logWebpack = (err, stats) => {
-    if (err) {
-        console.error(err.stack || err);
-        if (err.details) {
-            console.error(err.details);
-        }
-        return;
-    }
-
-    const info = stats.toJson();
-
-    if (stats.hasErrors()) {
-        console.error(info.errors);
-    }
-
-    if (stats.hasWarnings()) {
-        console.warn(info.warnings);
-    }
-
-
+            resolve();
+        })
+    });
 }
 
 
@@ -307,7 +382,7 @@ export function copyAssets( source, targetFolder ) {
 
     //check if folder needs to be created or integrated
     if ( !fs.existsSync( targetFolder ) ) {
-        fs.mkdirSync( targetFolder );
+        fs.mkdirSync( targetFolder, {recursive: true} );
     }
 
     //copy
