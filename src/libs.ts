@@ -274,3 +274,85 @@ export async function startOfflineStack(webpackConfig: any) {
 
 
 }
+
+export const logWebpack = (err, stats) => {
+    if (err) {
+        console.error(err.stack || err);
+        if (err.details) {
+            console.error(err.details);
+        }
+        return;
+    }
+
+    const info = stats.toJson();
+
+    if (stats.hasErrors()) {
+        console.error(info.errors);
+    }
+
+    if (stats.hasWarnings()) {
+        console.warn(info.warnings);
+    }
+
+
+}
+
+
+export function copyAssets( source, targetFolder ) {
+
+    const fs = require('fs');
+    const path = require('path');
+
+    var files = [];
+
+    //check if folder needs to be created or integrated
+    if ( !fs.existsSync( targetFolder ) ) {
+        fs.mkdirSync( targetFolder );
+    }
+
+    //copy
+    if ( fs.lstatSync( source ).isDirectory() ) {
+        files = fs.readdirSync( source );
+        files.forEach( function ( file ) {
+            var curSource = path.join( source, file );
+            console.log("source: " , curSource);
+            console.log("dest: " , path.join(targetFolder, path.parse(curSource).base));
+            if ( fs.lstatSync( curSource ).isDirectory() ) {
+                copyFolderRecursiveSync( curSource, targetFolder );
+            } else {
+                fs.copyFileSync( curSource, path.join(targetFolder, path.parse(curSource).base) );
+            }
+        } );
+    }
+}
+
+
+export function copyFolderRecursiveSync( source, target ) {
+    const fs = require('fs');
+    const path = require('path');
+
+    var files = [];
+
+    //check if folder needs to be created or integrated
+    var targetFolder = path.join( target, path.basename( source ) );
+    if ( !fs.existsSync( targetFolder ) ) {
+        fs.mkdirSync( targetFolder );
+    }
+
+    //copy
+    if ( fs.lstatSync( source ).isDirectory() ) {
+        files = fs.readdirSync( source );
+        files.forEach( function ( file ) {
+            var curSource = path.join( source, file );
+            if ( fs.lstatSync( curSource ).isDirectory() ) {
+                copyFolderRecursiveSync( curSource, targetFolder );
+            } else {
+                fs.copyFileSync( curSource, path.join(targetFolder, path.parse(curSource).base) );
+            }
+        } );
+    }
+}
+
+
+
+
