@@ -14,7 +14,13 @@ export const ConfigTypes = {
     /**
      * The higher level API to build/start a SSR app
      */
-    SSR:'SSR'
+    SSR:'SSR',
+
+    /**
+     * the higher level API to build/start/deploy an isomorphic app that comes with
+     * a pre-implemented client/server-framework
+     */
+    ISOMORPHIC:'ISOMORPHIC'
 
 };
 

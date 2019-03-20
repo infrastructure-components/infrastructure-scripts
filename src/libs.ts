@@ -175,9 +175,15 @@ export function complementWebpackConfig(webpackConfig: any) {
         webpackConfig.mode = "development";
 
         webpackConfig.devtool = 'source-map';
-        webpackConfig.resolve = {
-            extensions: ['.js', '.jsx', '.ts', '.tsx', "mjs"]
-        };
+
+        if (webpackConfig.resolve !== undefined) {
+            webpackConfig.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx', "mjs"];
+        } else {
+            webpackConfig.resolve = {
+                extensions: ['.js', '.jsx', '.ts', '.tsx', "mjs"]
+            };
+        }
+
 
         webpackConfig.optimization = {
             // We no not want to minimize our code.
@@ -344,6 +350,8 @@ export function startDevServer(webpackConfig: any) {
 
 export async function runWebpack (clientWpConfig) {
     const webpack = require('webpack');
+
+    console.log("starting webpack, ", clientWpConfig);
 
     return new Promise(function(resolve, reject) {
         webpack(clientWpConfig, (err, stats) => {

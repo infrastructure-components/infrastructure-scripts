@@ -28,14 +28,24 @@ export interface SsrConfig {
 
     /**
      * the SPA-client(s) of the SSR app
+     * can be undefined when using higher level isomorphic api
      */
-    clientConfig: AppConfig | Array<AppConfig>,
+    clientConfig: AppConfig | Array<AppConfig> | undefined,
 
     /**
      * the server-app configuration
+     * can be undefined when using higher level isomorphic api
      */
-    serverConfig: AppConfig
+    serverConfig: AppConfig | undefined
 }
+
+export const resolveAssetsPath = (ssrConfig: SsrConfig) => {
+    const path = require('path');
+    const assetsPath = path.resolve(getBuildPath(ssrConfig.serverConfig, ssrConfig.buildPath), ssrConfig.assetsPath);
+
+    return !assetsPath.endsWith("/") ? assetsPath+"/" : assetsPath;
+};
+
 
 export async function startSsr (ssrConfig: SsrConfig, keepSlsYaml: boolean) {
 
@@ -66,10 +76,7 @@ export async function buildSsr (ssrConfig: SsrConfig) {
     // build the server
     await runWebpack(serverWpConfig);
 
-    var assetsPath = path.resolve(getBuildPath(ssrConfig.serverConfig, ssrConfig.buildPath), ssrConfig.assetsPath);
-    if (!assetsPath.endsWith("/")) {
-        assetsPath = assetsPath+"/";
-    }
+    const assetsPath = resolveAssetsPath(ssrConfig);
     console.log("assetsPath: ", assetsPath);
     
     // copy the client apps to the assets-folder

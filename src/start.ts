@@ -5,11 +5,12 @@
 
 
 import { loadConfiguration, complementWebpackConfig, startDevServer } from './libs';
-import { ConfigTypes } from './config';
+import { ConfigTypes } from './lib/config';
 
 
 import { startSlsOffline } from './types/sls-config';
 import { startSsr } from './types/ssr-config';
+import {isoToSsr } from './types/iso-config';
 
 /**
  *
@@ -35,7 +36,14 @@ export async function start (configFilePath: string) {
         console.log("start ssr locally/offline");
         startSsr(config.ssrConfig, true);
 
-    } else {
+    } /* else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
+
+        // CURRENTLY: USE startSSr instead - works, too!
+
+        console.log("start isomorphic locally/offline");
+        startSsr(await isoToSsr(config.isoConfig, config.ssrConfig), true);
+
+    } */ else {
         console.error("Cannot start the provided configuration!")
     }
 

@@ -6,7 +6,7 @@ export interface AppConfig {
     /**
      * path to the entry component, e.g. './src/client/index.tsx'
      */
-    entry: string,
+    entry: string| any,
 
     /**
      * name of the client-app

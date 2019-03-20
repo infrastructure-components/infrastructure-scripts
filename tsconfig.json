@@ -1,12 +1,19 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es5",
     "sourceMap": true,
     "outDir": "./dist",
     "types": [
       "node"
-    ]
+    ],
+
+    // Target latest version of ECMAScript.
+    "target": "es6",
+
+    // Import non-ES modules as default imports.
+    "esModuleInterop": true,
+
+    "jsx": "react"
   },
   "include": [
     "src/**/*"
