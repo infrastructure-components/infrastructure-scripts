@@ -70,7 +70,11 @@ export async function buildSsr (ssrConfig: SsrConfig) {
     const serverWpConfig = complementWebpackConfig(toServerWebpackConfig(ssrConfig.serverConfig, ssrConfig.buildPath))
 
     // build the clients
-    await Array.isArray(clientWpConfig) ? clientWpConfig.map(async c => await runWebpack(c)) : await runWebpack(clientWpConfig)
+    if (Array.isArray(clientWpConfig)) {
+        await Promise.all(clientWpConfig.map(async c => await runWebpack(c)));
+    } else {
+        await runWebpack(clientWpConfig);
+    }
 
 
     // build the server
@@ -80,9 +84,14 @@ export async function buildSsr (ssrConfig: SsrConfig) {
     console.log("assetsPath: ", assetsPath);
     
     // copy the client apps to the assets-folder
-    Array.isArray(ssrConfig.clientConfig) ?
-        ssrConfig.clientConfig.map(c => copyAssets(getBuildPath(c, ssrConfig.buildPath), assetsPath)) :
-        await copyAssets(getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath), assetsPath);
+    if (Array.isArray(ssrConfig.clientConfig)) {
+        await Promise.all(ssrConfig.clientConfig.map(
+            async c =>await copyAssets(getBuildPath(c, ssrConfig.buildPath), assetsPath)
+        ));
+    } else {
+        copyAssets(getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath), assetsPath);
+    }
+
 
 }
 
@@ -99,10 +108,13 @@ export async function deploySsr (ssrConfig: SsrConfig, keepSlsYaml: boolean) {
 
     // copy the client apps to the assets-folder
     console.log("start S3 Sync");
-    Array.isArray(ssrConfig.clientConfig) ?
-        ssrConfig.clientConfig.map(async c => await s3sync(getBuildPath(c, ssrConfig.buildPath))) :
-        await s3sync(getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath));
-    console.log("S3 Sync completed");
+
+    if (Array.isArray(ssrConfig.clientConfig)) {
+        await Promise.all(ssrConfig.clientConfig.map(async c => await s3sync(getBuildPath(c, ssrConfig.buildPath))));
+    } else {
+        s3sync(getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath));
+    }
+
 }
 
 /**

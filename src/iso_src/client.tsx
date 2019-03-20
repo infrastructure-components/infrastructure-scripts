@@ -9,7 +9,7 @@ import { hydrate } from 'react-dom';
 
 
 const createClientWebApp = () => {
-    hydrate(require('IsoConfig').isoConfig.createClientApp(),
+    hydrate(require('IsoConfig').isoConfig.routes["INDEX_OF_ROUTE"].createClientApp(),
         document.getElementById('root')
     );
 };

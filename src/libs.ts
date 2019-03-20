@@ -243,12 +243,9 @@ export function complementWebpackConfig(webpackConfig: any) {
                         /**
                          * The Babel loader compiles Typescript to plain Javascript. The Babel compile options
                          * can be found in `tsconfig.json`
-                         *
-                         * // TODO document the tsconfig.json
-                         *
+                         *                         *
                          * The general  Babel configuration is done in `babel.config.js`
                          *
-                         * // TODO document the Babel configuration
                          */
                         loader: require.resolve('babel-loader'),
                         options: {
@@ -366,7 +363,6 @@ export function startDevServer(webpackConfig: any) {
     app.use(require('webpack-hot-middleware')(compiler));
 
     // this path directs to the output of the client, as defined in `webpack.config.client.js`
-    // TODO make the dir dynamic
     app.use(express.static(webpackConfig.output.path));
 
 

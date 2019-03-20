@@ -7,37 +7,6 @@ import ReactDOMServer from "react-dom/server";
 import express from "express";
 import serverless from "serverless-http";
 
-//import { createServerApp } from './app';
-
-function renderFullPage(html) {
-
-
-    return `<!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        
-      </head>
-      <body>
-        <div id="root">${html.trim()}</div>
-        <script src="assets/app.bundle.js"></script>
-      </body>
-    </html>`
-}
-
-
-async function serve (req, res) {
-
-    // collect the styles from the connected app
-    const htmlData = ReactDOMServer.renderToString(<div>{require('IsoConfig').isoConfig.createServerApp()}</div>);
-
-    // render a page with the state and return it in the response
-    res.status(200).send(renderFullPage(htmlData)).end();
-
-
-}
-
-
 const createServer = () => {
 
     // express is the web-framework that lets us configure the endpoints
@@ -50,15 +19,22 @@ const createServer = () => {
     app.use('/assets', express.static('./build/server/assets'));
 
 
-    /**
-     *  serve any 'get'-request made to the server
-     *
-     *  put at the end so that all the special routes are handled before!
-     */
-    app.get('*', async function (req, res, next) {
+    // split the routes here and define a function for each of the routes, with the right middleware
+    require('IsoConfig').isoConfig.routes.filter(route => route.middlewareCallbacks !== undefined && route.middlewareCallbacks.length > 0)
+        .map(route => {
+            if (route.method.toUpperCase() == "GET") {
+                app.get(route.path, ...route.middlewareCallbacks)
+            } else if (route.method.toUpperCase() == "POST") {
+                app.post(route.path, ...route.middlewareCallbacks)
+            } else if (route.method.toUpperCase() == "PUT") {
+                app.put(route.path, ...route.middlewareCallbacks)
+            } else if (route.method.toUpperCase() == "DELETE") {
+                app.delete(route.path, ...route.middlewareCallbacks)
+            }
 
-        await serve(req,res);
-    });
+            return route;
+        });
+
 
     return app;
 }

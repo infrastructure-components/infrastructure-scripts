@@ -1,11 +1,14 @@
-import {AppConfig} from "./app-config";
 import {SsrConfig} from "./ssr-config";
 import {complementWebpackConfig, promisify, runWebpack, TEMP_FOLDER} from "../libs";
-import {ConfigTypes} from "../lib/config";
-import {startSlsOffline, toSlsConfig} from "./sls-config";
-
+import { ReactNode} from "react";
+import {AppConfig} from "./app-config";
 
 export interface IRoute {
+
+    /**
+     * a unique id or name of the route
+     */
+    id: string,
 
     /**
      * the relative  path of the route, e.g. "/" for the root, or "/something", or "*" for any
@@ -18,6 +21,11 @@ export interface IRoute {
     method: string,
 
     /**
+     * Function that creates the ClientApp corresponding to the middleware-rendering
+     */
+    createClientApp: () => ReactNode,
+
+    /**
      * array of callbacks to be used of a route before handing over to the "*"-callback
      */
     middlewareCallbacks: Array<any>,
@@ -28,9 +36,9 @@ export interface IRoute {
 
 export interface IsoConfig {
 
-    // TODO EXPERIMENTAL! not supposed to be used here!
-    createServerApp: () => any,
-
+    // EXPERIMENTAL! not supposed to be used here!
+    //createServerApp: () => any,
+    //createClientApp: () => any,
 
     /**
      * The middleware-functions to apply generally
@@ -44,7 +52,7 @@ export interface IsoConfig {
 
 }
 
-export async function isoToSsr (iso: IsoConfig, ssrConfig: SsrConfig): Promise<SsrConfig> {
+export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfig: SsrConfig): Promise<SsrConfig> {
 
     const fs = require('fs');
     const path = require('path');
@@ -61,7 +69,6 @@ export async function isoToSsr (iso: IsoConfig, ssrConfig: SsrConfig): Promise<S
     const absolutePath = pwd.toString().replace(/(?:\r\n|\r|\n)/g, "");
     const tempPath = path.join(absolutePath, TEMP_FOLDER);
 
-    console.log("tempPath: ", tempPath);
     if ( !fs.existsSync( tempPath ) ) {
         fs.mkdirSync( tempPath );
     };
@@ -71,6 +78,10 @@ export async function isoToSsr (iso: IsoConfig, ssrConfig: SsrConfig): Promise<S
         fs.mkdirSync( serverPath );
     }
 
+    const isoConfigPath = path.resolve(
+        absolutePath,
+        configFilePath.replace(/\.[^/.]+$/, "")
+    );
 
     // pack the source code of the isomorphic server
     await runWebpack(complementWebpackConfig({
@@ -85,51 +96,11 @@ export async function isoToSsr (iso: IsoConfig, ssrConfig: SsrConfig): Promise<S
         },
         resolve: {
             alias: {
-                // TODO use name from the script!
-                IsoConfig: path.resolve(absolutePath, "isomorphic.config")
+                IsoConfig: isoConfigPath
             }
         },
         target: "node"
     }));
-
-
-    const clientPath = path.join(tempPath, "client");
-    if ( !fs.existsSync( clientPath ) ) {
-        fs.mkdirSync( clientPath );
-    }
-
-    // pack the source code of the isomorphic client
-    await runWebpack(complementWebpackConfig({
-        entry: {
-            // TODO refactor this!!!!
-            client: "./"+path.join("node_modules", "sls-aws-infrastructure", "dist", "iso_src", "client.js")
-        },
-        output: {
-            path: clientPath,
-            filename: 'client.js'
-        },
-        resolve: {
-            alias: {
-                // TODO use name from the script!
-                IsoConfig: path.resolve(absolutePath, "isomorphic.config")
-            }
-        },
-        target: "web"
-    }));
-
-    //console.log(createServer(iso, ssrConfig).toString());
-    //return;
-
-    // create an index-file for the server:
-    //console.log("iso: ", iso)
-
-    const clientIndexPath = path.join(clientPath, "client.js");
-
-    ssrConfig["clientConfig"] = {
-        entry: clientIndexPath, //'./src/client/index.tsx',
-        name: 'app'
-    };
-
 
     const serverIndexPath = path.join(serverPath, "index.js");
     await fs.writeFile(serverIndexPath, `const lib = require ('./server');
@@ -139,20 +110,76 @@ exports.default = server;`, function (err) {
         console.log('serverindex created...');
     });
 
-    // TODO we need a file as entry here, we would need to compile this using webpack?+tsc+babel
     ssrConfig["serverConfig"] = {
         entry: serverIndexPath, //'./src/server/index.tsx',
         name: 'server'
     };
 
-    /*
-    const result = {
-        type: ConfigTypes.SSR,
-        ssrConfig: ssrConfig
-    };*/
+    var configs: Array<AppConfig> = new Array<AppConfig>();
+
+
+    ssrConfig["clientConfig"] = await Promise.all(
+        iso.routes.map(async (route, index) =>await createClientApp(isoConfigPath, tempPath, route, index))
+    );
+
 
     return ssrConfig;
 };
+
+async function createClientApp(isoConfigPath: string, outputPath: string, route: IRoute, index: number): Promise<AppConfig> {
+
+    const fs = require('fs');
+    const path = require('path');
+
+    const clientPath = path.join(outputPath, route.id);
+    if ( !fs.existsSync( clientPath ) ) {
+        fs.mkdirSync( clientPath );
+    }
+
+    const filename = route.id+".js";
+    const clientIndexPath = path.join(clientPath, filename);
+
+
+    const ReplacePlugin = require('webpack-plugin-replace');
+
+
+    // pack the source code of the isomorphic client
+    await runWebpack(complementWebpackConfig({
+        entry: {
+            // TODO refactor this!!!!
+            client: "./"+path.join("node_modules", "sls-aws-infrastructure", "dist", "iso_src", "client.js")
+        },
+        output: {
+            path: clientPath,
+            filename: filename
+        },
+        resolve: {
+            alias: {
+                IsoConfig: isoConfigPath
+            }
+        },
+        target: "web",
+        plugins: [
+            new ReplacePlugin({
+                values: {
+                    '"INDEX_OF_ROUTE"': index
+                }
+            })
+        ]
+    }));
+
+    //console.log(createServer(iso, ssrConfig).toString());
+    //return;
+
+    // create an index-file for the server:
+    //console.log("iso: ", iso)
+
+    return {
+        entry: clientIndexPath,
+        name: route.id
+    }
+}
+
 
 /*
 export async function startIso (isoConfig: IsoConfig, ssrConfig: SsrConfig, keepSlsYaml: boolean) {

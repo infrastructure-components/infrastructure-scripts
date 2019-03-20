@@ -32,7 +32,7 @@ export async function build (configFilePath: string) {
     }  else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
 
         const { isoConfig, ssrConfig } = config;
-        await buildSsr(await isoToSsr(isoConfig, ssrConfig));
+        await buildSsr(await isoToSsr(configFilePath, isoConfig, ssrConfig));
 
     } else {
         // TODO implement the build process for higher level APIs
