@@ -1,4 +1,6 @@
 
+export const TEMP_FOLDER = ".infrastructure_temp";
+
 /**
  * transforms a function into a Promise
  */
@@ -129,7 +131,31 @@ export async function s3sync (srcFolder: string) {
  */
 export async function loadConfiguration (configFilePath: string) {
 
+    const path = require('path');
     const cmd = require('node-cmd');
+
+    const pwd = await promisify(callback => cmd.get(`pwd`, callback))
+        .then((data) => data)
+        .catch(err => {
+            console.log("err: ", err);
+            return "";
+        });
+
+    const absolutePath = pwd.toString().replace(/(?:\r\n|\r|\n)/g, "");
+
+    // pack the source code of the configuration file. This way, we include all imports/requires!
+    await runWebpack(complementWebpackConfig({
+        entry: {
+            config: "./"+configFilePath
+        },
+        output: {
+            libraryTarget: "commonjs2",
+            path: path.join(absolutePath, TEMP_FOLDER),
+            filename: 'config.js'
+        },
+        target: "node"
+    }));
+
 
     const data = await promisify(callback => cmd.get(`cat ${configFilePath}`, callback))
         .then((data) => data)
@@ -142,7 +168,9 @@ export async function loadConfiguration (configFilePath: string) {
         return;
     }
 
-    const configStr = await promisify(callback => cmd.get(`node -e "console.log(JSON.stringify(eval(require(\\\"./${configFilePath}\\\"))))"`, callback))
+    const resolvedConfigPath = "./"+path.join(TEMP_FOLDER, 'config.js');
+
+    const configStr = await promisify(callback => cmd.get(`node -e "console.log(JSON.stringify(eval(require(\\\"./${resolvedConfigPath}\\\"))))"`, callback))
         .then((data) => data)
         .catch(err => {
             console.log("err: ", err);

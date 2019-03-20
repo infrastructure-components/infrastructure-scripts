@@ -1,5 +1,5 @@
 
-import {loadConfiguration, complementWebpackConfig, runWebpack, promisify} from './libs';
+import {loadConfiguration, complementWebpackConfig, runWebpack, TEMP_FOLDER} from './libs';
 import { ConfigTypes } from './lib/config';
 import { buildSsr } from './types/ssr-config';
 import { isoToSsr } from './types/iso-config';
@@ -12,31 +12,9 @@ const cmd = require('node-cmd');
  */
 export async function build (configFilePath: string) {
 
-    const webpack = require('webpack');
+    //const webpack = require('webpack');
 
-    const pwd = await promisify(callback => cmd.get(`pwd`, callback))
-        .then((data) => data)
-        .catch(err => {
-            console.log("err: ", err);
-            return "";
-        });
-
-    const absolutePath = pwd.toString().replace(/(?:\r\n|\r|\n)/g, "");
-
-    // pack the source code of the isomorphic server
-    await runWebpack(complementWebpackConfig({
-        entry: {
-            server: "./"+configFilePath
-        },
-        output: {
-            libraryTarget: "commonjs2",
-            path: path.join(absolutePath, ".infrastructure-temp"),
-            filename: 'config.js'
-        },
-        target: "node"
-    }));
-
-    const config = await loadConfiguration("./"+path.join(".infrastructure-temp", 'config.js'));
+    const config = await loadConfiguration(configFilePath);
 
     //const config = await loadConfiguration(configFilePath);
 
@@ -52,9 +30,6 @@ export async function build (configFilePath: string) {
         await buildSsr(ssrConfig);
         
     }  else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
-
-
-
 
         const { isoConfig, ssrConfig } = config;
         await buildSsr(await isoToSsr(isoConfig, ssrConfig));

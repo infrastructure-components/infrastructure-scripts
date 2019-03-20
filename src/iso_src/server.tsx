@@ -29,7 +29,7 @@ function renderFullPage(html) {
 async function serve (req, res) {
 
     // collect the styles from the connected app
-    const htmlData = ReactDOMServer.renderToString(<div>{require('CreateServer').isoConfig.createServerApp()}</div>);
+    const htmlData = ReactDOMServer.renderToString(<div>{require('IsoConfig').isoConfig.createServerApp()}</div>);
 
     // render a page with the state and return it in the response
     res.status(200).send(renderFullPage(htmlData)).end();

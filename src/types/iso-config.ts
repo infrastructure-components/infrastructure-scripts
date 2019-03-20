@@ -1,6 +1,6 @@
 import {AppConfig} from "./app-config";
 import {SsrConfig} from "./ssr-config";
-import {complementWebpackConfig, promisify, runWebpack} from "../libs";
+import {complementWebpackConfig, promisify, runWebpack, TEMP_FOLDER} from "../libs";
 import {ConfigTypes} from "../lib/config";
 import {startSlsOffline, toSlsConfig} from "./sls-config";
 
@@ -59,13 +59,16 @@ export async function isoToSsr (iso: IsoConfig, ssrConfig: SsrConfig): Promise<S
         });
 
     const absolutePath = pwd.toString().replace(/(?:\r\n|\r|\n)/g, "");
-    const tempPath = path.join(absolutePath, '.infrastructure-temp');
-    const indexPath = path.join(tempPath, "index.js");
-
+    const tempPath = path.join(absolutePath, TEMP_FOLDER);
 
     console.log("tempPath: ", tempPath);
     if ( !fs.existsSync( tempPath ) ) {
         fs.mkdirSync( tempPath );
+    };
+
+    const serverPath = path.join(tempPath, "server");
+    if ( !fs.existsSync( serverPath ) ) {
+        fs.mkdirSync( serverPath );
     }
 
 
@@ -77,15 +80,41 @@ export async function isoToSsr (iso: IsoConfig, ssrConfig: SsrConfig): Promise<S
         },
         output: {
             libraryTarget: "commonjs2",
-            path: tempPath,
-            filename: '[name].js'
+            path: serverPath,
+            filename: 'server.js'
         },
         resolve: {
             alias: {
-                CreateServer: path.resolve(absolutePath, "isomorphic.config")
+                // TODO use name from the script!
+                IsoConfig: path.resolve(absolutePath, "isomorphic.config")
             }
         },
         target: "node"
+    }));
+
+
+    const clientPath = path.join(tempPath, "client");
+    if ( !fs.existsSync( clientPath ) ) {
+        fs.mkdirSync( clientPath );
+    }
+
+    // pack the source code of the isomorphic client
+    await runWebpack(complementWebpackConfig({
+        entry: {
+            // TODO refactor this!!!!
+            client: "./"+path.join("node_modules", "sls-aws-infrastructure", "dist", "iso_src", "client.js")
+        },
+        output: {
+            path: clientPath,
+            filename: 'client.js'
+        },
+        resolve: {
+            alias: {
+                // TODO use name from the script!
+                IsoConfig: path.resolve(absolutePath, "isomorphic.config")
+            }
+        },
+        target: "web"
     }));
 
     //console.log(createServer(iso, ssrConfig).toString());
@@ -94,22 +123,25 @@ export async function isoToSsr (iso: IsoConfig, ssrConfig: SsrConfig): Promise<S
     // create an index-file for the server:
     //console.log("iso: ", iso)
 
-    await fs.writeFile(indexPath, `const lib = require ('./server');
-const server = lib.default;
-exports.default = server;`, function (err) {
-        if (err) throw err;
-        console.log('serverless.yml created...');
-    });
-
+    const clientIndexPath = path.join(clientPath, "client.js");
 
     ssrConfig["clientConfig"] = {
-        entry: './src/client/index.tsx',
+        entry: clientIndexPath, //'./src/client/index.tsx',
         name: 'app'
     };
 
+
+    const serverIndexPath = path.join(serverPath, "index.js");
+    await fs.writeFile(serverIndexPath, `const lib = require ('./server');
+const server = lib.default;
+exports.default = server;`, function (err) {
+        if (err) throw err;
+        console.log('serverindex created...');
+    });
+
     // TODO we need a file as entry here, we would need to compile this using webpack?+tsc+babel
     ssrConfig["serverConfig"] = {
-        entry: indexPath, //'./src/server/index.tsx',
+        entry: serverIndexPath, //'./src/server/index.tsx',
         name: 'server'
     };
 
