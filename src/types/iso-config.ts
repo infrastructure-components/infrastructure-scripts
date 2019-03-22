@@ -1,9 +1,18 @@
-import {SsrConfig} from "./ssr-config";
+import {resolveAssetsPath, SsrConfig} from "./ssr-config";
 import {complementWebpackConfig, promisify, runWebpack, TEMP_FOLDER} from "../libs";
 import { ReactNode} from "react";
 import {AppConfig} from "./app-config";
+import {IRedirect, IRoute} from "../iso_src/routed-app";
 
-export interface IRoute {
+/**
+ * Structure of the promise returned by [[connectWithGraphQlDataLayer]]
+ */
+export interface IConnectionResult {
+    connectedApp: any;
+    getState: () => any;
+}
+
+export interface IClientApp {
 
     /**
      * a unique id or name of the route
@@ -12,6 +21,7 @@ export interface IRoute {
 
     /**
      * the relative  path of the route, e.g. "/" for the root, or "/something", or "*" for any
+     * Can be a regex to filter the paths of the routes and redirects
      */
     path: string,
 
@@ -19,6 +29,28 @@ export interface IRoute {
      * The http method of the route, e.g. get, post, ...
      */
     method: string,
+
+    /**
+     * Array of Routes that this app serves
+     */
+    routes: Array<IRoute>,
+
+    /**
+     * Array of Redirects
+     */
+    redirects: Array<IRedirect>,
+
+    /**
+     * This function only takes the app as parameter, set the schema of the implementation to the real one
+     * if you want to avoid network calls on the server side (rendering)
+     */
+    connectWithDataLayer: (ReactNode) => IConnectionResult,
+
+    /**
+     * Puts the data back into the app
+     * @param ReactNode
+     */
+    hydrateFromDataLayer: (ReactNode) => ReactNode,
 
     /**
      * Function that creates the ClientApp corresponding to the middleware-rendering
@@ -46,9 +78,9 @@ export interface IsoConfig {
     middlewares: Array<any>,
 
     /**
-     * specific routes that the app consists of
+     * specific clientApps that the app consists of
      */
-    routes: Array<IRoute>
+    clientApps: Array<IClientApp>
 
 }
 
@@ -83,32 +115,41 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
         configFilePath.replace(/\.[^/.]+$/, "")
     );
 
-    // pack the source code of the isomorphic server
-    await runWebpack(complementWebpackConfig({
+
+    ssrConfig["serverConfig"] = {
         entry: {
             // TODO refactor this!!!!
             server: "./"+path.join("node_modules", "sls-aws-infrastructure", "dist", "iso_src", "server.js")
         },
-        output: {
-            libraryTarget: "commonjs2",
+        name: "server"
+    }
+
+    ssrConfig["serverConfig"]["output"] = {
+        libraryTarget: "commonjs2",
             path: serverPath,
             filename: 'server.js'
-        },
-        resolve: {
-            alias: {
-                IsoConfig: isoConfigPath
-            }
-        },
-        target: "node"
-    }));
+    };
+    ssrConfig["serverConfig"]["resolve"] = {
+        alias: {
+            IsoConfig: isoConfigPath
+        }
+    };
+    ssrConfig["serverConfig"]["target"] = "node";
+
+    console.log("isoToSsr, run webpack on server config");
+    // pack the source code of the isomorphic server
+    await runWebpack(complementWebpackConfig(ssrConfig["serverConfig"]));
+
+    //console.log("resolved: ", resolveAssetsPath(ssrConfig));
 
     const serverIndexPath = path.join(serverPath, "index.js");
-    await fs.writeFile(serverIndexPath, `const lib = require ('./server');
-const server = lib.default;
-exports.default = server;`, function (err) {
-        if (err) throw err;
-        console.log('serverindex created...');
-    });
+    fs.writeFileSync(serverIndexPath, `const lib = require ('./server');
+const server = lib.default('${ssrConfig.assetsPath}', '${resolveAssetsPath(ssrConfig)}');
+exports.default = server;`);
+
+    //
+    console.log('serverindex created...');
+
 
     ssrConfig["serverConfig"] = {
         entry: serverIndexPath, //'./src/server/index.tsx',
@@ -117,26 +158,33 @@ exports.default = server;`, function (err) {
 
     var configs: Array<AppConfig> = new Array<AppConfig>();
 
+    console.log('now building clients...');
 
     ssrConfig["clientConfig"] = await Promise.all(
-        iso.routes.map(async (route, index) =>await createClientApp(isoConfigPath, tempPath, route, index))
-    );
+        iso.clientApps.map(async (app, index) => {
+            console.log("index: ", index);
+            console.log("app: ", app);
+            return await createClientApp(isoConfigPath, tempPath, iso.clientApps[index], index);
+        }
+    ));
 
 
     return ssrConfig;
 };
 
-async function createClientApp(isoConfigPath: string, outputPath: string, route: IRoute, index: number): Promise<AppConfig> {
+async function createClientApp(isoConfigPath: string, outputPath: string, app: any, index: number): Promise<AppConfig> {
+
+    console.log('createClientApp... ', isoConfigPath);
 
     const fs = require('fs');
     const path = require('path');
 
-    const clientPath = path.join(outputPath, route.id);
+    const clientPath = path.join(outputPath, app.id);
     if ( !fs.existsSync( clientPath ) ) {
         fs.mkdirSync( clientPath );
     }
 
-    const filename = route.id+".js";
+    const filename = app.id+".js";
     const clientIndexPath = path.join(clientPath, filename);
 
 
@@ -162,7 +210,7 @@ async function createClientApp(isoConfigPath: string, outputPath: string, route:
         plugins: [
             new ReplacePlugin({
                 values: {
-                    '"INDEX_OF_ROUTE"': index
+                    '"INDEX_OF_CLIENT"': index
                 }
             })
         ]
@@ -176,7 +224,7 @@ async function createClientApp(isoConfigPath: string, outputPath: string, route:
 
     return {
         entry: clientIndexPath,
-        name: route.id
+        name: app.id
     }
 }
 

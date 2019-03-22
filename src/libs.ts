@@ -131,6 +131,7 @@ export async function s3sync (srcFolder: string) {
  */
 export async function loadConfiguration (configFilePath: string) {
 
+    console.log("loadConfiguration");
     const path = require('path');
     const cmd = require('node-cmd');
 
@@ -142,6 +143,8 @@ export async function loadConfiguration (configFilePath: string) {
         });
 
     const absolutePath = pwd.toString().replace(/(?:\r\n|\r|\n)/g, "");
+
+    //console.log(webpackConfig.module.rules[1]);
 
     // pack the source code of the configuration file. This way, we include all imports/requires!
     await runWebpack(complementWebpackConfig({
@@ -167,6 +170,8 @@ export async function loadConfiguration (configFilePath: string) {
     if (!data) {
         return;
     }
+
+    console.log("loadConfiguration: run eval!");
 
     const resolvedConfigPath = "./"+path.join(TEMP_FOLDER, 'config.js');
 
@@ -243,7 +248,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                         /**
                          * The Babel loader compiles Typescript to plain Javascript. The Babel compile options
                          * can be found in `tsconfig.json`
-                         *                         *
+                         *
                          * The general  Babel configuration is done in `babel.config.js`
                          *
                          */
@@ -254,6 +259,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                                  * the @babel/env loader requires deactivated modules for async function support
                                  * see: https://github.com/babel/babel/issues/5085
                                  */
+                                //require.resolve('@babel/preset-typescript'),
                                 [require.resolve("@babel/preset-env"), target !== "web" ? {"modules": false, "targets": { "node": "8.10" }} : {}],
                                 require.resolve('@babel/preset-react')
                             ],
@@ -372,7 +378,7 @@ export function startDevServer(webpackConfig: any) {
 }
 
 
-export async function runWebpack (clientWpConfig) {
+export function runWebpack (clientWpConfig) {
     const webpack = require('webpack');
 
     console.log("starting webpack, ", clientWpConfig);
@@ -399,6 +405,7 @@ export async function runWebpack (clientWpConfig) {
                 console.warn(info.warnings);
             }
 
+            console.log("finishing webpack...", clientWpConfig.entry);
             resolve();
         })
     });

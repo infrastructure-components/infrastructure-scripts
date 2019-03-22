@@ -11,9 +11,13 @@ export interface AppConfig {
     /**
      * name of the client-app
      */
-    name: string
+    name: string,
+
 }
 
+export const getClientFilename = (name: string): string => {
+    return name+".bundle.js";
+}
 
 /**
  * transform a Client-Config to a Webpack-Client-Config
@@ -27,7 +31,7 @@ export const toClientWebpackConfig = (config: AppConfig, buildPath: string) => {
         },
         output: {
             path: getBuildPath(config, buildPath),
-            filename: `${config.name}.bundle.js`
+            filename: getClientFilename(config.name)
         },
         target: "web"
     }

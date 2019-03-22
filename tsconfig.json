@@ -10,6 +10,7 @@
     // Target latest version of ECMAScript.
     "target": "es6",
 
+    "isolatedModules": false,
     // Import non-ES modules as default imports.
     "esModuleInterop": true,
 

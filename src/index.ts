@@ -5,4 +5,4 @@
  */
 export const CONFIG = require('./lib/config');
 
-//export const Isomorphic = require('./lib/isomorphic');
+//export const IConnectionResult = require('./types/iso-config').IConnectionResult
