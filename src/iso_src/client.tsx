@@ -32,7 +32,13 @@ const createClientWebApp = () => {
         delete window.__BASENAME__;
     }
 
-    const clientApp = require('IsoConfig').isoConfig.clientApps["INDEX_OF_CLIENT"];
+    var IsoConfig = require('IsoConfig');
+    if (IsoConfig.default && IsoConfig.default.props) {
+        console.log("found component!");
+        IsoConfig = IsoConfig.default.props;
+    }
+
+    const clientApp = IsoConfig.isoConfig.clientApps["INDEX_OF_CLIENT"];
 
     const hydrateFromDataLayer = clientApp.hydrateFromDataLayer !== undefined ?
         clientApp.hydrateFromDataLayer :

@@ -26,12 +26,18 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
     app.use('/'+assetsDir, express.static(resolvedAssetsPath));
 
     // connect the middlewares
-    require('IsoConfig').isoConfig.middlewares.map(mw => app.use(mw));
+    var IsoConfig = require('IsoConfig');
+    if (IsoConfig.default && IsoConfig.default.props) {
+        console.log("found component!");
+        IsoConfig = IsoConfig.default.props;
+    }
+
+    IsoConfig.isoConfig.middlewares.map(mw => app.use(mw));
 
 
 
     // split the clientApps here and define a function for each of the clientApps, with the right middleware
-    require('IsoConfig').isoConfig.clientApps.filter(
+    IsoConfig.isoConfig.clientApps.filter(
         clientApp => clientApp.middlewareCallbacks !== undefined)
         .map(clientApp => {
             const serveMiddleware = (req, res, next) => serve(req, res, next, clientApp, assetsDir);

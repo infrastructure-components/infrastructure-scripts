@@ -18,6 +18,7 @@ export async function build (configFilePath: string) {
 
     //const config = await loadConfiguration(configFilePath);
 
+    console.log("config-type: ", config.type);
 
     // && scripts build webpack.config.server.js && cp -rf ./dist/js/ ./build/server/assets/
 

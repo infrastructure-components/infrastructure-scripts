@@ -188,6 +188,10 @@ export async function loadConfiguration (configFilePath: string) {
     var config = undefined;
     eval('config=' + configStr);
 
+    if (config.default && config.default.props) {
+        console.log("found component!");
+        config = config.default.props;
+    }
     console.log("config: ",config);
 
     return config;
