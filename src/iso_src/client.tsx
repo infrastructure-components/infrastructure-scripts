@@ -34,7 +34,11 @@ const createClientWebApp = () => {
 
     const clientApp = require('IsoConfig').isoConfig.clientApps["INDEX_OF_CLIENT"];
 
-    hydrate(clientApp.hydrateFromDataLayer(
+    const hydrateFromDataLayer = clientApp.hydrateFromDataLayer !== undefined ?
+        clientApp.hydrateFromDataLayer :
+        (node) => node;
+
+    hydrate(hydrateFromDataLayer(
         createClientApp(
             clientApp.routes,
             clientApp.redirects,

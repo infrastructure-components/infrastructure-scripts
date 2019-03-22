@@ -44,18 +44,18 @@ export interface IClientApp {
      * This function only takes the app as parameter, set the schema of the implementation to the real one
      * if you want to avoid network calls on the server side (rendering)
      */
-    connectWithDataLayer: (ReactNode) => IConnectionResult,
+    connectWithDataLayer?: (ReactNode) => IConnectionResult,
 
     /**
      * Puts the data back into the app
      * @param ReactNode
      */
-    hydrateFromDataLayer: (ReactNode) => ReactNode,
+    hydrateFromDataLayer?: (ReactNode) => ReactNode,
 
     /**
      * Function that creates the ClientApp corresponding to the middleware-rendering
      */
-    createClientApp: () => ReactNode,
+    //createClientApp: () => ReactNode,
 
     /**
      * array of callbacks to be used of a route before handing over to the "*"-callback

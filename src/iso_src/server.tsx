@@ -103,8 +103,14 @@ async function serve (req, res, next, clientApp, assetsDir) {
     console.log("routePath: ", routePath);
     ////////// END OF REFACTORING required
 
+    const connectWithDataLayer = clientApp.connectWithDataLayer !== undefined ?
+        clientApp.connectWithDataLayer :
+        async function (app) {
+            return {connectedApp: app, getState: () => ""};
+        };
+
     // create the app and connect it with the DataAbstractionLayer
-    await clientApp.connectWithDataLayer(
+    await connectWithDataLayer(
         createServerApp(
             clientApp.routes,
             clientApp.redirects,
