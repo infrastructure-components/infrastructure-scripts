@@ -119,7 +119,7 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
     ssrConfig["serverConfig"] = {
         entry: {
             // TODO refactor this!!!!
-            server: "./"+path.join("node_modules", "sls-aws-infrastructure", "dist", "iso_src", "server.js")
+            server: "./"+path.join("node_modules", "infrastructure-components", "dist", "iso_src", "server.js")
         },
         name: "server"
     }
@@ -195,7 +195,7 @@ async function createClientApp(isoConfigPath: string, outputPath: string, app: a
     await runWebpack(complementWebpackConfig({
         entry: {
             // TODO refactor this!!!!
-            client: "./"+path.join("node_modules", "sls-aws-infrastructure", "dist", "iso_src", "client.js")
+            client: "./"+path.join("node_modules", "infrastructure-components", "dist", "iso_src", "client.js")
         },
         output: {
             path: clientPath,

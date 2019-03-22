@@ -1,5 +1,5 @@
 {
-  "name": "sls-aws-infrastructure",
+  "name": "infrastructure-components",
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/frankzickert/sls-aws-infrastructure.git"
+    "url": "git+https://github.com/infrastructure-components/infrastructure-components.git"
   },
   "author": "Dr. Frank Zickert",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/frankzickert/sls-aws-infrastructure/issues"
+    "url": "https://github.com/infrastructure-components/infrastructure-components/issues"
   },
-  "homepage": "https://github.com/frankzickert/sls-aws-infrastructure#readme",
+  "homepage": "https://github.com/infrastructure-components/infrastructure-components#readme",
   "dependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.2.2",
