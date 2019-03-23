@@ -5,6 +5,6 @@
  */
 export const CONFIG = require('./lib/config');
 
-export const SlsIsomorphicAws = require('./lib/sls-isomorphic-aws').default;
-
-//export const IConnectionResult = require('./types/iso-config').IConnectionResult
+export const SlsIsomorphic = require('./lib/sls-isomorphic').default;
+export const ClientApp = require('./lib/client-app').default;
+export const Middleware = require('./lib/middleware').default;

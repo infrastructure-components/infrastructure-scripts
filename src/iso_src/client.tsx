@@ -1,3 +1,4 @@
+import {loadIsoConfigFromComponent} from "../isolib";
 
 /**
  * The global declaration is required of the typedoc documentation
@@ -17,8 +18,10 @@ import React from 'react';
 import { hydrate } from 'react-dom';
 import { createClientApp } from './routed-app';
 
-
 /**
+ * For a not yet known reason (maybe because compiled on "web"), this module must not import anything
+ * that does not exist in web-mode, e.g. fs
+ *
  * Creates the main Client WebApp. The `./src/client/index.tsx` module exports the result of calling this function
  * This serves as Entry-Point specified in the [[webpackConfigClient]]
  *
@@ -33,10 +36,12 @@ const createClientWebApp = () => {
     }
 
     var IsoConfig = require('IsoConfig');
-    if (IsoConfig.default && IsoConfig.default.props) {
+    if (IsoConfig && IsoConfig.default && IsoConfig.default.props) {
         console.log("found component!");
-        IsoConfig = IsoConfig.default.props;
+        IsoConfig = loadIsoConfigFromComponent(IsoConfig.default);
     }
+
+
 
     const clientApp = IsoConfig.isoConfig.clientApps["INDEX_OF_CLIENT"];
 

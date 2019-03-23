@@ -14,6 +14,7 @@ import helmet from 'react-helmet';
 import {createServerApp} from "./routed-app";
 
 import { getClientFilename } from '../types/app-config';
+import {loadIsoConfigFromComponent} from "../isolib";
 
 const createServer = (assetsDir, resolvedAssetsPath) => {
 
@@ -27,10 +28,11 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
 
     // connect the middlewares
     var IsoConfig = require('IsoConfig');
-    if (IsoConfig.default && IsoConfig.default.props) {
+    if (IsoConfig && IsoConfig.default && IsoConfig.default.props) {
         console.log("found component!");
-        IsoConfig = IsoConfig.default.props;
+        IsoConfig = loadIsoConfigFromComponent(IsoConfig.default);
     }
+
 
     IsoConfig.isoConfig.middlewares.map(mw => app.use(mw));
 

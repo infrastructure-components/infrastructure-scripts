@@ -1,4 +1,6 @@
 
+import {loadIsoConfigFromComponent} from "./isolib";
+
 export const TEMP_FOLDER = ".infrastructure_temp";
 
 /**
@@ -188,14 +190,26 @@ export async function loadConfiguration (configFilePath: string) {
     var config = undefined;
     eval('config=' + configStr);
 
-    if (config.default && config.default.props) {
-        console.log("found component!");
-        config = config.default.props;
-    }
-    console.log("config: ",config);
 
-    return config;
+
+    return parseConfig(config);
 };
+
+/**
+ * checks whether the configuration is done by a SlsIsomorphic-Component
+ *
+ * @param config
+ */
+export function parseConfig(config: any) {
+    if (config && config.default && config.default.props) {
+
+        console.log("found component!", config.default);
+        return loadIsoConfigFromComponent(config.default);
+    }
+
+    console.log("found object-config: ",config);
+    return config;
+}
 
 export function complementWebpackConfig(webpackConfig: any) {
     if (webpackConfig !== undefined) {
