@@ -10,6 +10,7 @@ import { ConfigTypes } from './lib/config';
 
 import { startSlsOffline, deploySls } from './types/sls-config';
 import { startSsr, deploySsr } from './types/ssr-config';
+import {isoToSsr} from "./types/iso-config";
 
 /**
  *
@@ -41,8 +42,14 @@ export async function deploy (configFilePath: string) {
         console.log("deploy ssr");
         deploySsr(config.ssrConfig, true);
 
+    } else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
+
+        const { isoConfig, ssrConfig } = config;
+        console.log("deploy iso");
+        deploySsr((await isoToSsr(configFilePath, isoConfig, ssrConfig)), true);
+
     } else {
-        console.error("Cannot start the provided configuration!")
+        console.error("Cannot deploy the provided configuration!")
     }
 
 

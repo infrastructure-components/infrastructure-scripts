@@ -94,7 +94,7 @@ export function prepareForDeployment(yamlEdit, deployConfiguration: ISlsDeployCo
         environment: {
             // set the STAGE_PATH environment variable to the same we use during the build process
             STAGE: "${env:STAGE}",
-
+            STAGE_PATH: "${env:STAGE_PATH}",
         },
 
         // specifies the rights of the lambda-execution role

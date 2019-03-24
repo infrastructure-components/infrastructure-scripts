@@ -45,13 +45,29 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
             const serveMiddleware = (req, res, next) => serve(req, res, next, clientApp, assetsDir);
 
             if (clientApp.method.toUpperCase() == "GET") {
-                app.get(clientApp.path, ...clientApp.middlewareCallbacks, serveMiddleware)
+
+                app.get(clientApp.path, ...clientApp.middlewareCallbacks)
+                applyRouteMw(clientApp, app);
+                app.get(clientApp.path, serveMiddleware);
+
             } else if (clientApp.method.toUpperCase() == "POST") {
-                app.post(clientApp.path, ...clientApp.middlewareCallbacks, serveMiddleware)
+
+                app.post(clientApp.path, ...clientApp.middlewareCallbacks)
+                applyRouteMw(clientApp, app);
+                app.post(clientApp.path, serveMiddleware);
+
             } else if (clientApp.method.toUpperCase() == "PUT") {
-                app.put(clientApp.path, ...clientApp.middlewareCallbacks, serveMiddleware)
+
+                app.put(clientApp.path, ...clientApp.middlewareCallbacks)
+                applyRouteMw(clientApp, app);
+                app.put(clientApp.path, serveMiddleware);
+
             } else if (clientApp.method.toUpperCase() == "DELETE") {
-                app.delete(clientApp.path, ...clientApp.middlewareCallbacks, serveMiddleware)
+
+                app.delete(clientApp.path, ...clientApp.middlewareCallbacks)
+                applyRouteMw(clientApp, app);
+                app.delete(clientApp.path, serveMiddleware);
+
             }
 
             return clientApp;
@@ -59,6 +75,25 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
 
 
     return app;
+};
+
+const applyRouteMw = (clientApp, app) => {
+    clientApp.routes
+        .filter(route => route.middlewareCallbacks !== undefined && route.middlewareCallbacks.length > 0)
+        .map(route => {
+            if (route.method.toUpperCase() == "GET") {
+                app.get(route.path, ...route.middlewareCallbacks)
+            } else if (route.method.toUpperCase() == "POST") {
+                app.post(route.path, ...route.middlewareCallbacks)
+            } else if (route.method.toUpperCase() == "PUT") {
+                app.put(route.path, ...route.middlewareCallbacks)
+            } else if (route.method.toUpperCase() == "DELETE") {
+                app.delete(route.path, ...route.middlewareCallbacks)
+            }
+
+            return route;
+        });
+
 }
 
 async function serve (req, res, next, clientApp, assetsDir) {

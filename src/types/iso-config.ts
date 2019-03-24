@@ -3,6 +3,8 @@ import {complementWebpackConfig, promisify, runWebpack, TEMP_FOLDER} from "../li
 import {AppConfig} from "./app-config";
 import {IClientApp} from "./client-app-config";
 
+export const ISOCONFIG_SERVERNAME = 'server';
+
 /**
  * Structure of the promise returned by [[connectWithGraphQlDataLayer]]
  */
@@ -67,13 +69,13 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
             // TODO refactor this!!!!
             server: "./"+path.join("node_modules", "infrastructure-components", "dist", "iso_src", "server.js")
         },
-        name: "server"
+        name: ISOCONFIG_SERVERNAME
     }
 
     ssrConfig["serverConfig"]["output"] = {
         libraryTarget: "commonjs2",
             path: serverPath,
-            filename: 'server.js'
+            filename: ISOCONFIG_SERVERNAME+'.js'
     };
     ssrConfig["serverConfig"]["resolve"] = {
         alias: {

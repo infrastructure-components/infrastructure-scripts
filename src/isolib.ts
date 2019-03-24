@@ -19,6 +19,23 @@ const isMiddleware = (component) => {
         component.props.callback !== undefined;
 };
 
+const isRedirect = (component) => {
+
+    return component.props &&
+        component.props.from !== undefined &&
+        component.props.to !== undefined &&
+        component.props.status !== undefined;
+};
+
+const isRoute = (component) => {
+
+    return component.props &&
+        component.props.path !== undefined &&
+        component.props.render !== undefined &&
+        component.props.name !== undefined;
+};
+
+
 const getChildrenArray = (component) => {
     return Array.isArray(component.props.children) ? component.props.children : [component.props.children];
 };
@@ -40,10 +57,46 @@ const applyClientApp = (caComponent) => {
         Object.assign({}, caComponent.props),
         {
             middlewareCallbacks: (caComponent.props.middlewareCallbacks !== undefined ?
-                caComponent.props.middlewareCallbacks : []).concat(parseMiddlewares(caComponent))
+                caComponent.props.middlewareCallbacks : []).concat(parseMiddlewares(caComponent)),
+
+            redirects: (caComponent.props.redirects !== undefined ?
+                caComponent.props.redirects : []).concat(parseRedirects(caComponent)),
+
+            routes: (caComponent.props.routes !== undefined ?
+                caComponent.props.routes : []).concat(parseRoutes(caComponent)),
         }
     );
 
+};
+
+const parseRedirects = (component) => {
+    return getChildrenArray(component)
+        .filter(child => isRedirect(child))
+        .map(child => applyRedirect(child));
+};
+
+const applyRedirect = (redirectComponent) => {
+    //console.log("redirect: ", redirectComponent.props);
+    return redirectComponent.props
+};
+
+const parseRoutes = (component) => {
+    return getChildrenArray(component)
+        .filter(child => isRoute(child))
+        .map(child => applyRoute(child, component.props.method));
+};
+
+const applyRoute = (routeComponent, method) => {
+    //console.log("route: ", routeComponent.props);
+    return Object.assign(
+        Object.assign({}, routeComponent.props),
+        {
+            method: method,
+            exact: true,
+            middlewareCallbacks: (routeComponent.props.middlewareCallbacks !== undefined ?
+                routeComponent.props.middlewareCallbacks : []).concat(parseMiddlewares(routeComponent)),
+        }
+    );
 };
 
 

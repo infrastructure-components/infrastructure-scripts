@@ -36,6 +36,12 @@ export async function start (configFilePath: string) {
         console.log("start ssr locally/offline");
         startSsr(config.ssrConfig, true);
 
+    } else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
+
+        const { isoConfig, ssrConfig } = config;
+        console.log("start iso locally/offline");
+        startSsr((await isoToSsr(configFilePath, isoConfig, ssrConfig)), true);
+
     } /* else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
 
         // CURRENTLY: USE startSSr instead - works, too!
