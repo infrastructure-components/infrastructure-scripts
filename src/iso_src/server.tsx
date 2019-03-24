@@ -259,10 +259,11 @@ function renderHtmlPage(html, styles, preloadedState, helmet, basename, routePat
         <script>
             var loadscript = document.createElement('script');
             function getPath() {
+                console.log( window.location.pathname);
                 const basePath = ${basename !== "/" ? "window.location.pathname.startsWith(\""+basename+"\") ? \"\": \"/\" " : "\"\"" };
                 const routePath= "${routePath !== "/" ? routePath : ""}";
-                const pre = window.location.pathname.startsWith(basePath+routePath)+"/" ? "../" : "/";
-                return pre+"${path.join(assetsDir, getClientFilename(clientApp.id))}";
+                const pre = window.location.pathname.startsWith(basePath+routePath+"/") ? ".." : "";
+                return pre+"${path.join(basename, assetsDir, getClientFilename(clientApp.id))}";
                 
             }
             

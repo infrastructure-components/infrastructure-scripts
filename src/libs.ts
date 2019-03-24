@@ -133,7 +133,7 @@ export async function s3sync (srcFolder: string) {
  */
 export async function loadConfiguration (configFilePath: string) {
 
-    console.log("loadConfiguration");
+    //console.log("loadConfiguration");
     const path = require('path');
     const cmd = require('node-cmd');
 
@@ -162,7 +162,7 @@ export async function loadConfiguration (configFilePath: string) {
     }));
 
 
-    const data = await promisify(callback => cmd.get(`cat ${configFilePath}`, callback))
+    const data = await promisify(callback => cmd.get(`cat ${path.join(absolutePath, TEMP_FOLDER, "config.js")}`, callback))
         .then((data) => data)
         .catch(err => {
             console.log("err: ", err);
@@ -277,7 +277,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                                  * the @babel/env loader requires deactivated modules for async function support
                                  * see: https://github.com/babel/babel/issues/5085
                                  */
-                                //require.resolve('@babel/preset-typescript'),
+                                require.resolve('@babel/preset-typescript'),
                                 [require.resolve("@babel/preset-env"), target !== "web" ? {"modules": false, "targets": { "node": "8.10" }} : {}],
                                 require.resolve('@babel/preset-react')
                             ],
