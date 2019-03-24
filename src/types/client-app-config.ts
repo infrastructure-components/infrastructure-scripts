@@ -1,6 +1,6 @@
 import {IRedirect, IRoute} from "../iso_src/routed-app";
-import {ReactNode} from "react";
-import {IConnectionResult} from "./iso-config";
+import {IDataLayer} from "../lib/data-layer";
+
 
 export interface IClientApp {
 
@@ -31,16 +31,9 @@ export interface IClientApp {
     redirects: Array<IRedirect>,
 
     /**
-     * This function only takes the app as parameter, set the schema of the implementation to the real one
-     * if you want to avoid network calls on the server side (rendering)
+     * The DataLayer implementation, if used
      */
-    connectWithDataLayer?: (ReactNode) => IConnectionResult,
-
-    /**
-     * Puts the data back into the app
-     * @param ReactNode
-     */
-    hydrateFromDataLayer?: (ReactNode) => ReactNode,
+    dataLayer?: IDataLayer,
 
     /**
      * Function that creates the ClientApp corresponding to the middleware-rendering

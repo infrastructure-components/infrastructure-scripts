@@ -177,7 +177,14 @@ export async function loadConfiguration (configFilePath: string) {
 
     const resolvedConfigPath = "./"+path.join(TEMP_FOLDER, 'config.js');
 
-    const configStr = await promisify(callback => cmd.get(`node -e "console.log(JSON.stringify(eval(require(\\\"./${resolvedConfigPath}\\\"))))"`, callback))
+    /*console.log(await promisify(callback => cmd.get(`node -e "console.log(eval(require(\\\"./${resolvedConfigPath}\\\")))"`, callback))
+        .then((data) => data)
+        .catch(err => {
+            console.log("err: ", err);
+            return undefined;
+        }));*/
+
+    const configStr = await promisify(callback => cmd.get(`node -e "console.log(JSON.stringify(eval(require(\\\"./${resolvedConfigPath}\\\")), (name, val) => name ==='type' && typeof val === 'function' ? val.toString() :val))"`, callback))
         .then((data) => data)
         .catch(err => {
             console.log("err: ", err);

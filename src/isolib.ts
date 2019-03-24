@@ -4,6 +4,8 @@
  * @param component a SlsIsomorphic React-Component
  */
 import {ConfigTypes} from "./lib/config";
+import {promisify} from "./libs";
+import React from 'react'
 
 const isClientApp = (component) => {
 
@@ -52,6 +54,18 @@ const parseMiddlewares = (component) => {
 }
 
 const applyClientApp = (caComponent) => {
+
+    getChildrenArray(caComponent).filter(c => !isRedirect(c) && !isRoute(c) && !isMiddleware(c))
+        .forEach(c=> {
+            var config = undefined;
+            console.log("child of App: ", c.type, c);
+            const str = "const React = require('react');const x="+c.type+"; config=new x({test: 'x'})";
+            console.log("str: ", str);
+            const x = eval(str);
+
+
+            console.log("eval: ", config);
+        });
 
     return Object.assign(
         Object.assign({}, caComponent.props),
@@ -102,7 +116,7 @@ const applyRoute = (routeComponent, method) => {
 
 export function loadIsoConfigFromComponent(component: any) {
 
-    console.log("child: ", component.props.children.props);
+    //console.log("child: ", component.props.children.props);
 
     return {
         type: ConfigTypes.ISOMORPHIC,
