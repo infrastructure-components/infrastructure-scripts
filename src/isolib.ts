@@ -12,13 +12,13 @@ const isClientApp = (component) => {
     return component.props &&
         component.props.id !== undefined &&
         component.props.path !== undefined &&
-        component.props.method !== undefined;
+        component.props.method !== undefined ? true : false;
 };
 
 const isMiddleware = (component) => {
 
     return component.props &&
-        component.props.callback !== undefined;
+        component.props.callback !== undefined ? true : false;
 };
 
 const isRedirect = (component) => {
@@ -26,7 +26,7 @@ const isRedirect = (component) => {
     return component.props &&
         component.props.from !== undefined &&
         component.props.to !== undefined &&
-        component.props.status !== undefined;
+        component.props.status !== undefined ? true : false;
 };
 
 const isRoute = (component) => {
@@ -34,11 +34,40 @@ const isRoute = (component) => {
     return component.props &&
         component.props.path !== undefined &&
         component.props.render !== undefined &&
-        component.props.name !== undefined;
+        component.props.name !== undefined ? true : false;
 };
 
+export const parseCustomComponent = (component, compileMode) => {
 
-const getChildrenArray = (component) => {
+    try {
+
+        //console.log("parseCustomComponent: " , component);
+
+
+        const params = Object.assign({
+            infrastructureMode: compileMode ? "compile" : undefined,
+        }, component.props);
+
+        var custom = undefined;
+        const parsed = `const f=${component.type}; f(${JSON.stringify(params)})`;
+
+        const result = eval(parsed);
+
+        //console.log("isCustomComponent: ", component)
+        //console.log("parsed: ", parsed);
+        //console.log("result: ", result);
+
+        return result.infrastructureType !== undefined ? result : undefined;
+
+    } catch (error) {
+        //console.error(error);
+        return undefined;
+    }
+
+
+}
+
+export const getChildrenArray = (component) => {
     return Array.isArray(component.props.children) ? component.props.children : [component.props.children];
 };
 
@@ -55,17 +84,7 @@ const parseMiddlewares = (component) => {
 
 const applyClientApp = (caComponent) => {
 
-    getChildrenArray(caComponent).filter(c => !isRedirect(c) && !isRoute(c) && !isMiddleware(c))
-        .forEach(c=> {
-            var config = undefined;
-            console.log("child of App: ", c.type, c);
-            const str = "const React = require('react');const x="+c.type+"; config=new x({test: 'x'})";
-            console.log("str: ", str);
-            const x = eval(str);
-
-
-            console.log("eval: ", config);
-        });
+    console.log("applyClientApp: " , caComponent);
 
     return Object.assign(
         Object.assign({}, caComponent.props),
@@ -82,6 +101,55 @@ const applyClientApp = (caComponent) => {
     );
 
 };
+
+
+export const applyCustomComponents = (component: any, addToTopLevelConfig, compileMode) => {
+    //getChildrenArray(caComponent).forEach( c => {
+        const customComponent = parseCustomComponent(component, compileMode);
+
+
+        if (customComponent !== undefined && compileMode) {
+            console.log("CustomComponent: ", customComponent);
+
+            // now add to the configuration
+            addToTopLevelConfig(customComponent);
+
+            // we expect a single one child!!
+            if (Array.isArray(customComponent.children)) {
+                throw new Error("custom Component must have a single one child!");
+            }
+            //console.log("component: " , component);
+            return component.props.children
+
+        } else if (customComponent !== undefined) {
+            //console.log("applyCustomComponents | customComponent ")
+
+            if (React.isValidElement(component)) {
+                console.log("custom component is a react-component, " , component)
+                if (Array.isArray(customComponent.children)) {
+                    throw new Error("custom Component must have a single one child!");
+                }
+
+                const child = component["props"]["children"];
+                
+                var customProps = {}
+                customProps[customComponent.infrastructureType] = React.cloneElement(component, Object.assign({}, component.props, {infrastructureMode: "component"}))
+
+                console.log("customProps: " , customProps);
+                
+                return React.cloneElement(component, Object.assign({}, child.props, customProps))
+                //return React.cloneElement(component, Object.assign({}, component.props, {infrastructureMode: "component"}))
+
+            }
+
+            return component.props.children;
+        }
+
+        // when the component is NOT a custom one, we return it
+        return component;
+
+    //});
+}
 
 const parseRedirects = (component) => {
     return getChildrenArray(component)
@@ -114,9 +182,14 @@ const applyRoute = (routeComponent, method) => {
 };
 
 
-export function loadIsoConfigFromComponent(component: any) {
+export function loadIsoConfigFromComponent(component: any, compileMode: boolean = true) {
 
     //console.log("child: ", component.props.children.props);
+
+    const addToTopLevelConfig = (c) => {
+        // TODO add this to the configuration
+        console.log("addToTopLevelConfig: ", c);
+    }
 
     return {
         type: ConfigTypes.ISOMORPHIC,
@@ -124,6 +197,7 @@ export function loadIsoConfigFromComponent(component: any) {
             middlewares: parseMiddlewares(component),
 
             clientApps: getChildrenArray(component)
+                .map(child => applyCustomComponents(child, addToTopLevelConfig, compileMode))
                 .filter(child => isClientApp(child))
                 .map(child => applyClientApp(child)),
         },

@@ -14,7 +14,8 @@ import helmet from 'react-helmet';
 import {createServerApp} from "./routed-app";
 
 import { getClientFilename } from '../types/app-config';
-import {loadIsoConfigFromComponent} from "../isolib";
+import {loadIsoConfigFromComponent, applyCustomComponents} from "../isolib";
+//import { applyAppClientModules } from '../types/client-app-config';
 
 const createServer = (assetsDir, resolvedAssetsPath) => {
 
@@ -30,7 +31,7 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
     var IsoConfig = require('IsoConfig');
     if (IsoConfig && IsoConfig.default && IsoConfig.default.props) {
         console.log("found component!");
-        IsoConfig = loadIsoConfigFromComponent(IsoConfig.default);
+        IsoConfig = loadIsoConfigFromComponent(IsoConfig.default, false);
     }
 
 
@@ -39,9 +40,11 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
 
 
     // split the clientApps here and define a function for each of the clientApps, with the right middleware
-    IsoConfig.isoConfig.clientApps.filter(
-        clientApp => clientApp.middlewareCallbacks !== undefined)
+    IsoConfig.isoConfig.clientApps
+        .filter(clientApp => clientApp.middlewareCallbacks !== undefined)
         .map(clientApp => {
+
+
             const serveMiddleware = (req, res, next) => serve(req, res, next, clientApp, assetsDir);
 
             if (clientApp.method.toUpperCase() == "GET") {
@@ -146,9 +149,12 @@ async function serve (req, res, next, clientApp, assetsDir) {
     console.log("routePath: ", routePath);
     ////////// END OF REFACTORING required
 
-    const connectWithDataLayer = clientApp.connectWithDataLayer !== undefined ?
-        clientApp.connectWithDataLayer :
+    console.log("app data layer: ", clientApp.dataLayer);
+
+    const connectWithDataLayer = clientApp.dataLayer !== undefined ?
+        clientApp.dataLayer.type({infrastructureMode: "component"}).connectWithDataLayer :
         async function (app) {
+            console.log("default dummy data layer")
             return {connectedApp: app, getState: () => ""};
         };
 
@@ -160,6 +166,8 @@ async function serve (req, res, next, clientApp, assetsDir) {
             basename,
             req.url,
             context, req)).then(({connectedApp, getState}) => {
+
+        console.log("resolved...")
 
         // collect the styles from the connected app
         const htmlData = ReactDOMServer.renderToString(sheet.collectStyles(connectedApp));

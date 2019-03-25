@@ -38,16 +38,19 @@ const createClientWebApp = () => {
     var IsoConfig = require('IsoConfig');
     if (IsoConfig && IsoConfig.default && IsoConfig.default.props) {
         console.log("found component!");
-        IsoConfig = loadIsoConfigFromComponent(IsoConfig.default);
+        IsoConfig = loadIsoConfigFromComponent(IsoConfig.default, false);
     }
 
 
 
     const clientApp = IsoConfig.isoConfig.clientApps["INDEX_OF_CLIENT"];
 
-    const hydrateFromDataLayer = clientApp.hydrateFromDataLayer !== undefined ?
-        clientApp.hydrateFromDataLayer :
-        (node) => node;
+    const hydrateFromDataLayer = clientApp.dataLayer !== undefined ?
+        clientApp.dataLayer.type({infrastructureMode: "component"}).hydrateFromDataLayer :
+        (node) => {
+            console.log("this is the dummy data layer hydration")
+            return node;
+        }
 
     hydrate(hydrateFromDataLayer(
         createClientApp(
