@@ -3,7 +3,6 @@ import { AppConfig, toClientWebpackConfig, toServerWebpackConfig, getBuildPath }
 import {complementWebpackConfig, runWebpack, copyAssets, s3sync} from '../libs';
 import { toSlsConfig, startSlsOffline, deploySls } from './sls-config';
 
-
 /**
  * 
  */
@@ -47,13 +46,18 @@ export const resolveAssetsPath = (ssrConfig: SsrConfig) => {
 };
 
 
-export async function startSsr (ssrConfig: SsrConfig, keepSlsYaml: boolean) {
+export async function startSsr (ssrConfig: SsrConfig, slsConfig: any = {}, keepSlsYaml: boolean = false) {
+
+    const merge = require('deepmerge');
 
     // prepare the sls-config
-    const slsConfig = toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath);
+    const mergedSlsConfig = merge(
+        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath),
+        slsConfig
+    );
 
     // start the sls-config
-    startSlsOffline(slsConfig, keepSlsYaml);
+    startSlsOffline(mergedSlsConfig, keepSlsYaml);
 
 }
 

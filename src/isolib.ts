@@ -5,7 +5,8 @@
  */
 import {ConfigTypes} from "./lib/config";
 import {promisify} from "./libs";
-import React from 'react'
+import React from 'react';
+import * as deepmerge from 'deepmerge';
 
 const isClientApp = (component) => {
 
@@ -186,69 +187,46 @@ export function loadIsoConfigFromComponent(component: any, compileMode: boolean 
 
     //console.log("child: ", component.props.children.props);
 
+    var arrConfigs = [];
     const addToTopLevelConfig = (c) => {
         // TODO add this to the configuration
         console.log("addToTopLevelConfig: ", c);
-    }
 
-    return {
+        const allowed = ['slsConfig', 'ssrConfig'];
+
+        arrConfigs.push(Object.keys(c)
+            .filter(key => allowed.includes(key))
+            .reduce((obj, key) => {
+                obj[key] = c[key];
+                return obj;
+            }, {})
+        );
+    }
+    
+    const clientApps= getChildrenArray(component)
+        .map(child => applyCustomComponents(child, addToTopLevelConfig, compileMode))
+        .filter(child => isClientApp(child))
+        .map(child => applyClientApp(child));
+
+    const result = deepmerge.all([{
         type: ConfigTypes.ISOMORPHIC,
         isoConfig: {
             middlewares: parseMiddlewares(component),
 
-            clientApps: getChildrenArray(component)
-                .map(child => applyCustomComponents(child, addToTopLevelConfig, compileMode))
-                .filter(child => isClientApp(child))
-                .map(child => applyClientApp(child)),
+            clientApps: clientApps
         },
 
         ssrConfig: {
             stackName: component.props.stackName,
             buildPath: component.props.buildPath,
             assetsPath: component.props.assetsPath
-        }
-    }
+        },
 
+        slsConfig: {}
+    }, ...arrConfigs
+    ]);
 
+    console.log("loaded IsoConfig: " , result);
+    return result;
 
-    /*{
-        type: ConfigTypes.ISOMORPHIC,
-        isoConfig: {
-
-            middlewares: [
-                function log(req, res, next) {
-                    console.log("here I am again");
-
-                    next();
-                }
-            ],
-
-                clientApps: [
-                {
-                    id: "main",
-                    path: "*",
-                    method: "GET",
-                    routes: [
-                        {
-                            path: '/',
-                            method: "GET",
-                            middlewareCallbacks: [
-                            ],
-                            render: (props) => (<ComponentPage {...props}/>), //<ForceLogin ></ForceLogin>
-                        name: 'Infrastructure Components',
-                exact: true
-        }
-        ],
-            redirects: [],
-
-                //connectWithDataLayer: connectWithDataLayer,
-                //hydrateFromDataLayer: hydrateFromDataLayer,
-                middlewareCallbacks: [
-                routeMain
-            ],
-
-        }
-        ]
-        }
-    }*/
 }

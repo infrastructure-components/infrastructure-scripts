@@ -34,13 +34,13 @@ export async function start (configFilePath: string) {
     } else if (config.type === ConfigTypes.SSR && config.ssrConfig !== undefined) {
 
         console.log("start ssr locally/offline");
-        startSsr(config.ssrConfig, true);
+        startSsr(config.ssrConfig, config.slsConfig !== undefined ? config.slsConfig : {}, true);
 
     } else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
 
         const { isoConfig, ssrConfig } = config;
         console.log("start iso locally/offline");
-        startSsr((await isoToSsr(configFilePath, isoConfig, ssrConfig)), true);
+        startSsr((await isoToSsr(configFilePath, isoConfig, ssrConfig)), config.slsConfig !== undefined ? config.slsConfig : {}, true);
 
     } /* else if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
 

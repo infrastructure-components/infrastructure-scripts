@@ -173,7 +173,7 @@ export async function loadConfiguration (configFilePath: string) {
         return;
     }
 
-    console.log("loadConfiguration: run eval!");
+    //console.log("loadConfiguration: run eval!");
 
     const resolvedConfigPath = "./"+path.join(TEMP_FOLDER, 'config.js');
 
@@ -195,6 +195,8 @@ export async function loadConfiguration (configFilePath: string) {
 
     console.log("components: " , components.default.type({}));*/
 
+    // TODO refactor this. should be possible without node and console.log!
+    //var configStr = "";
     const configStr = await promisify(callback => cmd.get(`node -e "console.log(JSON.stringify(eval(require(\\\"./${resolvedConfigPath}\\\")), (name, val) => name ==='type' && typeof val === 'function' ? val.toString() :val))"`, callback))
         .then((data) => data)
         .catch(err => {

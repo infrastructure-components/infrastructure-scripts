@@ -338,6 +338,9 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
         package: {
             include: [
                 `${buildPath}/**/*`
+            ],
+            exclude: [
+                "node_modules/infrastructure-components/node_modules/**/*"
             ]
         },
         functions: {
