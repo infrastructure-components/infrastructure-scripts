@@ -1,7 +1,6 @@
 import {resolveAssetsPath, SsrConfig} from "./ssr-config";
 import {complementWebpackConfig, promisify, runWebpack, TEMP_FOLDER} from "../libs";
-import {AppConfig} from "./app-config";
-import {IClientApp} from "./client-app-config";
+import {AppConfig, IClientApp} from "infrastructure-components";
 
 export const ISOCONFIG_SERVERNAME = 'server';
 

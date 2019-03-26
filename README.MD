@@ -1,22 +1,29 @@
 
-# Scripts
+# Infrastructure-Scripts
+
+Infrastructure-scripts provide all the scripts required to build, start, and deploy infrastructure-components.
 
 This lib should provide the scripts like "react-scripts" does for react-starter
 
-This lib takes care of the build and deployment steps of a staged serverless environment running on AWS.
 
-we use [node-cmd](https://www.npmjs.com/package/node-cmd)
+# Installation
 
+This lib contains many libraries that you only need during development/deployment. Thus, install this library
+as devDependency:
 
-Rather than cmd, we use the webpack node api.
+- npm i -D infrastructure-scripts
 
-# Typescript
+Further, these packages are required in your project:
 
-- Write Library Project in Typescript: see: https://codeburst.io/https-chidume-nnamdi-com-npm-module-in-typescript-12b3b22f0724
-
-# Dependencies
+Globally:
 
 - npm i -g serverless
+
+devDependencies:
+
 - npm i -D serverless-offline
 - npm i -D serverless-http
-- npm i -D express
+
+dependencies:
+
+- npm i -s express

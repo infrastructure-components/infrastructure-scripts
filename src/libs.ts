@@ -1,5 +1,5 @@
 
-import {loadIsoConfigFromComponent} from "./isolib";
+import {loadIsoConfigFromComponent} from "infrastructure-components";
 
 export const TEMP_FOLDER = ".infrastructure_temp";
 
@@ -77,7 +77,7 @@ export function slsLogin () {
  * - STATIC_ASSETS_BUCKET
  * - STAGE
  */
-export async function s3sync (srcFolder: string) {
+export async function s3sync (bucket: string, srcFolder: string) {
 
     return new Promise((resolve, reject) => {
         var client = require('s3-node-client').createClient({
@@ -102,7 +102,7 @@ export async function s3sync (srcFolder: string) {
             deleteRemoved: false, // default false, whether to remove s3 objects that have no corresponding local file.
             s3Params: {
                 // the bucket must match the name that is constructed in serverless.yml
-                Bucket: process.env.STATIC_ASSETS_BUCKET+"-"+process.env.STAGE,
+                Bucket: bucket,
                 //Prefix: "",
                 // other options supported by putObject, except Body and ContentLength.
                 // See: http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#putObject-property
@@ -123,6 +123,10 @@ export async function s3sync (srcFolder: string) {
         });
     });
 
+}
+
+export function getStaticBucketName (stackName: string, assetsPath: string, stage: string) {
+    return `${stackName}-${assetsPath}-${stage}`;
 }
 
 /**
@@ -325,10 +329,6 @@ export function complementWebpackConfig(webpackConfig: any) {
                 }, {
                     test: /\.(png|woff|woff2|eot|ttf|svg)$/,
                     loader: require.resolve('url-loader')
-                }, {
-                    test: /\.(graphql|gql)$/,
-                    exclude: /node_modules/,
-                    loader: require.resolve('graphql-tag/loader')
                 }
             ]
         };

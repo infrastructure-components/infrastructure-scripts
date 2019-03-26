@@ -5,7 +5,7 @@
 
 
 import { loadConfiguration, complementWebpackConfig, startDevServer } from './libs';
-import { ConfigTypes } from './lib/config';
+import { ConfigTypes } from 'infrastructure-components';
 
 
 import { startSlsOffline } from './types/sls-config';

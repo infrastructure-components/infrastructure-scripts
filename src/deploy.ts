@@ -5,7 +5,7 @@
 
 
 import { loadConfiguration, complementWebpackConfig, startDevServer } from './libs';
-import { ConfigTypes } from './lib/config';
+import { ConfigTypes } from 'infrastructure-components';
 
 
 import { startSlsOffline, deploySls } from './types/sls-config';
@@ -31,10 +31,7 @@ export async function deploy (configFilePath: string) {
     } else if (config.type === ConfigTypes.LOWLEVEL_SERVER && config.slsConfig !== undefined) {
 
         console.log("Deploy LowLevel SSR!");
-        deploySls(config.slsConfig, {
-            // for we do not have the assetsPath in a configuration, we fall back to environment variables!
-            assetsPath: "${ASSETSDIR}"
-        }, true);
+        deploySls(config.slsConfig, true);
 
 
     } else if (config.type === ConfigTypes.SSR && config.ssrConfig !== undefined) {
@@ -46,7 +43,7 @@ export async function deploy (configFilePath: string) {
 
         const { isoConfig, ssrConfig } = config;
         console.log("deploy iso");
-        deploySsr((await isoToSsr(configFilePath, isoConfig, ssrConfig)), true);
+        deploySsr((await isoToSsr(configFilePath, isoConfig, ssrConfig)), config.slsConfig !== undefined ? config.slsConfig : {}, true);
 
     } else {
         console.error("Cannot deploy the provided configuration!")

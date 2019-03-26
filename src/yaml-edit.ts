@@ -66,7 +66,7 @@ export const YamlEditor = (input) => {
 
                         if (Array.isArray(val)) {
                             val.map((arrItem, idx2) => {
-                                console.log("item: ", arrItem);
+                                //console.log("item: ", arrItem);
                                 let arrLines=generateSnippet(arrItem, indentLevel+2, true);
                                 lines = lines.concat(arrLines);
                             });
@@ -83,9 +83,9 @@ export const YamlEditor = (input) => {
                         //lines = lines.concat(generateSnippet(val, indentLevel + 1, false));
 
                         if (Array.isArray(val)) {
-                            console.log("arr?: YES", val);
+                            //console.log("arr?: YES", val);
                             val.map((arrItem, idx2) => {
-                                console.log("item: ", arrItem);
+                                //console.log("item: ", arrItem);
                                 let arrLines=generateSnippet(arrItem, indentLevel+2, true);
                                 lines = lines.concat(arrLines);
                             });
@@ -109,9 +109,9 @@ export const YamlEditor = (input) => {
 
 
                     if (Array.isArray(val)) {
-                        console.log("arr?: YES", val);
+                        //console.log("arr?: YES", val);
                         val.map((arrItem, idx2) => {
-                            console.log("item: ", arrItem);
+                            //console.log("item: ", arrItem);
                             let arrLines=generateSnippet(arrItem, indentLevel+2, true);
                             lines = lines.concat(arrLines);
                         });

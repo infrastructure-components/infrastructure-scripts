@@ -1,6 +1,6 @@
 
-import { AppConfig, toClientWebpackConfig, toServerWebpackConfig, getBuildPath } from './app-config';
-import {complementWebpackConfig, runWebpack, copyAssets, s3sync} from '../libs';
+import { AppConfig, toClientWebpackConfig, toServerWebpackConfig, getBuildPath } from 'infrastructure-components';
+import {complementWebpackConfig, runWebpack, copyAssets, s3sync, getStaticBucketName} from '../libs';
 import { toSlsConfig, startSlsOffline, deploySls } from './sls-config';
 
 /**
@@ -46,21 +46,6 @@ export const resolveAssetsPath = (ssrConfig: SsrConfig) => {
 };
 
 
-export async function startSsr (ssrConfig: SsrConfig, slsConfig: any = {}, keepSlsYaml: boolean = false) {
-
-    const merge = require('deepmerge');
-
-    // prepare the sls-config
-    const mergedSlsConfig = merge(
-        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath),
-        slsConfig
-    );
-
-    // start the sls-config
-    startSlsOffline(mergedSlsConfig, keepSlsYaml);
-
-}
-
 export async function buildSsr (ssrConfig: SsrConfig) {
 
 
@@ -99,24 +84,35 @@ export async function buildSsr (ssrConfig: SsrConfig) {
 
 }
 
-export async function deploySsr (ssrConfig: SsrConfig, keepSlsYaml: boolean) {
-// prepare the sls-config
-    const slsConfig = toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath);
-
+export async function startSsr (ssrConfig: SsrConfig, slsConfig: any = {}, keepSlsYaml: boolean = false) {
 
     // start the sls-config
-    await deploySls(slsConfig, {
-        assetsPath: `"${ssrConfig.assetsPath}"`
-    }, keepSlsYaml);
+    startSlsOffline(
+        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath, ssrConfig.assetsPath, slsConfig),
+        keepSlsYaml
+    );
 
+}
+
+
+export async function deploySsr (ssrConfig: SsrConfig, slsConfig: any = {}, keepSlsYaml: boolean = false) {
+// prepare the sls-config
+
+    // start the sls-config
+    await deploySls(
+        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath, ssrConfig.assetsPath, slsConfig),
+        keepSlsYaml
+    );
+
+    const staticBucketName = getStaticBucketName(ssrConfig.stackName, ssrConfig.assetsPath, process.env.STAGE);
 
     // copy the client apps to the assets-folder
     console.log("start S3 Sync");
-
+    
     if (Array.isArray(ssrConfig.clientConfig)) {
-        await Promise.all(ssrConfig.clientConfig.map(async c => await s3sync(getBuildPath(c, ssrConfig.buildPath))));
+        await Promise.all(ssrConfig.clientConfig.map(async c => await s3sync(staticBucketName, getBuildPath(c, ssrConfig.buildPath))));
     } else {
-        s3sync(getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath));
+        s3sync(staticBucketName, getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath));
     }
 
 }

@@ -1,6 +1,6 @@
 
 import {loadConfiguration, complementWebpackConfig, runWebpack, TEMP_FOLDER} from './libs';
-import { ConfigTypes } from './lib/config';
+import { ConfigTypes } from 'infrastructure-components';
 import { buildSsr } from './types/ssr-config';
 import { isoToSsr } from './types/iso-config';
 const path = require('path');

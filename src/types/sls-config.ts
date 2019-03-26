@@ -1,5 +1,5 @@
 import { YamlEditor } from '../yaml-edit';
-import {AppConfig, getBuildPath} from "./app-config";
+import {AppConfig } from "infrastructure-components";
 import { slsLogin, s3sync } from '../libs';
 
 /**
@@ -30,11 +30,8 @@ resources:
 
 `;
 
-export interface ISlsDeployConfiguration {
-    assetsPath: string
-}
 
-export async function createSlsYaml (slsConfig: any, keepSlsYaml: boolean, deployConfiguration?: ISlsDeployConfiguration) {
+export async function createSlsYaml (slsConfig: any, keepSlsYaml: boolean) {
     // create a serverless.yml in the root directory
 
     const fs = require("fs");
@@ -47,12 +44,8 @@ export async function createSlsYaml (slsConfig: any, keepSlsYaml: boolean, deplo
     const cmd = require('node-cmd');
     let yamlEdit = YamlEditor(SERVERLESS_YML);
 
-    if (deployConfiguration !== undefined) {
-        prepareForDeployment(yamlEdit, deployConfiguration);
-    }
 
-
-    // add the
+    // add the sls-configuration to the yml
     Object.keys(slsConfig).forEach(key => {
         console.log (key);
         yamlEdit.insertChild(key, slsConfig[key]);
@@ -69,158 +62,6 @@ export async function createSlsYaml (slsConfig: any, keepSlsYaml: boolean, deplo
 
 }
 
-export function prepareForDeployment(yamlEdit, deployConfiguration: ISlsDeployConfiguration) {
-
-    //takes the stage information from the environment variables, otherwise from what the provider-section specifies
-    yamlEdit.insertChild("custom", {
-        stage: "${env:STAGE}"
-    });
-
-
-    yamlEdit.insertChild("provider", {
-        // set stage to environment variables
-        stage: "${env:STAGE}",
-
-        // # take the region from the environment variables
-        region: "${env:AWS_REGION}",
-
-        // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
-        stackName: "${self:service.name}-${env:STAGE}",
-
-        // Use a custom name for the API Gateway API
-        apiName: "${self:service.name}-${env:STAGE}-api",
-
-        // set the environment variables
-        environment: {
-            // set the STAGE_PATH environment variable to the same we use during the build process
-            STAGE: "${env:STAGE}",
-            STAGE_PATH: "${env:STAGE_PATH}",
-        },
-
-        // specifies the rights of the lambda-execution role
-        iamRoleStatements: [
-            {
-                //let the technical user read from S3
-                Effect: "Allow",
-                Action: [ "s3:Get*", "s3:List*"],
-                Resource: "\"*\""
-            }
-        ]
-    });
-
-    yamlEdit.insertChild("resources", {
-        Resources: {
-            // Bucket of the client side webapp files (bundle.js...)
-            StaticBucket: {
-                Type: "AWS::S3::Bucket",
-                Properties: {
-                    // the bucket name is the combination of the cloudstackname, a minus, and the name of the assetsdir
-                    BucketName: "${env:STATIC_ASSETS_BUCKET}-${env:STAGE}",
-                    AccessControl: "PublicRead",
-                    WebsiteConfiguration: {
-                        IndexDocument: "index.html"
-                    },
-                    LifecycleConfiguration: {
-                        Rules: [{
-                            Id: "S3ExpireMonthly",
-                            ExpirationInDays: 30,
-                            Status: "Enabled"
-                        }]
-                    },
-                    CorsConfiguration: {
-                        CorsRules: [{
-                            AllowedMethods: ['GET'],
-                            AllowedOrigins: ['"*"'],
-                            AllowedHeaders: ['"*"']
-                        }]
-
-                    }
-
-
-                }
-            },
-
-            StaticBucketPolicy: {
-                Type: "AWS::S3::BucketPolicy",
-                Properties: {
-                    Bucket: {
-                        Ref: "StaticBucket"
-                    },
-                    PolicyDocument: {
-                        Statement: {
-                            Sid: "PublicReadGetObject",
-                            Effect: "Allow",
-                            Principal: '"*"',
-                            Action: ["s3:GetObject"],
-                            Resource: {
-                                "Fn::Join": "[\"\", [\"arn:aws:s3:::\", {\"Ref\": \"StaticBucket\" }, \"/*\"]]"
-                            }
-
-
-                        }
-                    }
-                }
-            },
-
-            AssetsResource: {
-                Type: 'AWS::ApiGateway::Resource',
-                Properties: {
-                    ParentId: "!GetAtt ApiGatewayRestApi.RootResourceId",
-                    RestApiId: "!Ref ApiGatewayRestApi",
-                    PathPart: deployConfiguration.assetsPath
-                }
-            },
-
-            Resource: {
-                Type: 'AWS::ApiGateway::Resource',
-                Properties: {
-                    ParentId: "!Ref AssetsResource",
-                    RestApiId: "!Ref ApiGatewayRestApi",
-                    PathPart: '"{proxy+}"'
-                }
-
-            },
-
-            ProxyMethod: {
-                Type: 'AWS::ApiGateway::Method',
-                Properties: {
-                    HttpMethod: "ANY",
-                    ResourceId: "!Ref Resource",
-                    RestApiId: "!Ref ApiGatewayRestApi",
-                    AuthorizationType: "NONE",
-                    RequestParameters: {
-                        "method.request.path.proxy": "true"
-                    },
-                    Integration: {
-                        CacheKeyParameters: ['"method.request.path.proxy"'],
-                        RequestParameters: {
-                            "integration.request.path.proxy": '"method.request.path.proxy"'
-                        },
-                        IntegrationHttpMethod: "ANY",
-                        Type: "HTTP_PROXY",
-                        Uri: "https://s3-${env:AWS_REGION}.amazonaws.com/${env:STATIC_ASSETS_BUCKET}-${env:STAGE}/{proxy}",
-                        PassthroughBehavior: "WHEN_NO_MATCH",
-                        IntegrationResponses: [{
-                            StatusCode: 200
-                        }]
-
-                    }
-
-                }
-            },
-
-            Deployment: {
-                DependsOn: ["ProxyMethod"],
-                Type: 'AWS::ApiGateway::Deployment',
-                Properties: {
-                    RestApiId: "!Ref ApiGatewayRestApi",
-                    StageName: "${env:STAGE}"
-                }
-            }
-        }
-    });
-
-}
 
 export function existsSlsYml () {
     const fs = require("fs");
@@ -262,10 +103,10 @@ async function runSlsCmd(slsCmd: string, onStdOut?: (data) => void) {
     });
 }
 
-export async function deploySls(slsConfig: any, deployConfiguration: ISlsDeployConfiguration, keepSlsYaml: boolean) {
+export async function deploySls(slsConfig: any, keepSlsYaml: boolean) {
     const fs = require("fs");
 
-    createSlsYaml(slsConfig, keepSlsYaml, deployConfiguration);
+    createSlsYaml(slsConfig, keepSlsYaml);
 
     // login in to Serverless/Aws
     await slsLogin();
@@ -284,7 +125,7 @@ export async function startSlsOffline (slsConfig: any, keepSlsYaml: boolean) {
 
     const fs = require("fs");
 
-    createSlsYaml(slsConfig, keepSlsYaml, undefined);
+    createSlsYaml(slsConfig, keepSlsYaml);
 
     await runSlsCmd(`sls offline start`, async (data) => {
         if (!keepSlsYaml && data.indexOf("Serverless: Offline listening") >= 0 && await existsSlsYml()) {
@@ -325,24 +166,28 @@ export async function startSlsOffline (slsConfig: any, keepSlsYaml: boolean) {
 
 
 
-export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPath: string) => {
-
+export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPath: string, assetsPath: string, slsConfig: any) => {
+    
+    const merge = require('deepmerge');
     const path = require ('path');
 
-    return {
+    return merge({
         service: {
             // it is allowed to use env-variables, but don't forget to specify them
             // e.g. "${env:CLOUDSTACKNAME}-${env:STAGE}"
             name: stackName
         },
+
+        custom: {
+            stage: "${env:STAGE}"
+        },
+
         package: {
             include: [
                 `${buildPath}/**/*`
-            ],
-            exclude: [
-                "node_modules/infrastructure-components/node_modules/**/*"
             ]
         },
+
         functions: {
             server: {
                 // index.default refers to the default export of the file
@@ -357,6 +202,152 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
                 ]
             }
 
+        },
+
+        provider: {
+            // set stage to environment variables
+            stage: "${env:STAGE}",
+
+            // # take the region from the environment variables
+            region: "${env:AWS_REGION}",
+
+            // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
+            stackName: "${self:service.name}-${env:STAGE}",
+
+            // Use a custom name for the API Gateway API
+            apiName: "${self:service.name}-${env:STAGE}-api",
+
+            // name of the static bucket, must match lib/getStaticBucketName
+            staticBucket: `${stackName}-${assetsPath}-`+"${env:STAGE}",
+
+            // set the environment variables
+            environment: {
+                // set the STAGE_PATH environment variable to the same we use during the build process
+                STAGE: "${env:STAGE}",
+                STAGE_PATH: "${env:STAGE_PATH, ''}",
+            },
+
+            // specifies the rights of the lambda-execution role
+            iamRoleStatements: [
+                {
+                    //let the technical user read from S3
+                    Effect: "Allow",
+                    Action: [ "s3:Get*", "s3:List*"],
+                    Resource: "\"*\""
+                }
+            ]
+        },
+
+        resources: {
+            Resources: {
+                // Bucket of the client side webapp files (bundle.js...)
+                StaticBucket: {
+                    Type: "AWS::S3::Bucket",
+                        Properties: {
+                        // the bucket name is the combination of the cloudstackname, a minus, and the name of the assetsdir
+                        BucketName: "${self:provider.staticBucket}",
+                            AccessControl: "PublicRead",
+                            WebsiteConfiguration: {
+                            IndexDocument: "index.html"
+                        },
+                        LifecycleConfiguration: {
+                            Rules: [{
+                                Id: "S3ExpireMonthly",
+                                ExpirationInDays: 30,
+                                Status: "Enabled"
+                            }]
+                        },
+                        CorsConfiguration: {
+                            CorsRules: [{
+                                AllowedMethods: ['GET'],
+                                AllowedOrigins: ['"*"'],
+                                AllowedHeaders: ['"*"']
+                            }]
+
+                        }
+
+
+                    }
+                },
+
+                StaticBucketPolicy: {
+                    Type: "AWS::S3::BucketPolicy",
+                        Properties: {
+                        Bucket: {
+                            Ref: "StaticBucket"
+                        },
+                        PolicyDocument: {
+                            Statement: {
+                                Sid: "PublicReadGetObject",
+                                    Effect: "Allow",
+                                    Principal: '"*"',
+                                    Action: ["s3:GetObject"],
+                                    Resource: {
+                                    "Fn::Join": "[\"\", [\"arn:aws:s3:::\", {\"Ref\": \"StaticBucket\" }, \"/*\"]]"
+                                }
+
+
+                            }
+                        }
+                    }
+                },
+
+                AssetsResource: {
+                    Type: 'AWS::ApiGateway::Resource',
+                        Properties: {
+                        ParentId: "!GetAtt ApiGatewayRestApi.RootResourceId",
+                            RestApiId: "!Ref ApiGatewayRestApi",
+                            PathPart: `"${assetsPath}"`
+                    }
+                },
+
+                Resource: {
+                    Type: 'AWS::ApiGateway::Resource',
+                        Properties: {
+                        ParentId: "!Ref AssetsResource",
+                            RestApiId: "!Ref ApiGatewayRestApi",
+                            PathPart: '"{proxy+}"'
+                    }
+
+                },
+
+                ProxyMethod: {
+                    Type: 'AWS::ApiGateway::Method',
+                        Properties: {
+                        HttpMethod: "ANY",
+                            ResourceId: "!Ref Resource",
+                            RestApiId: "!Ref ApiGatewayRestApi",
+                            AuthorizationType: "NONE",
+                            RequestParameters: {
+                            "method.request.path.proxy": "true"
+                        },
+                        Integration: {
+                            CacheKeyParameters: ['"method.request.path.proxy"'],
+                                RequestParameters: {
+                                "integration.request.path.proxy": '"method.request.path.proxy"'
+                            },
+                            IntegrationHttpMethod: "ANY",
+                                Type: "HTTP_PROXY",
+                                Uri: "https://s3-${env:AWS_REGION}.amazonaws.com/${self:provider.staticBucket}/{proxy}",
+                                PassthroughBehavior: "WHEN_NO_MATCH",
+                                IntegrationResponses: [{
+                                StatusCode: 200
+                            }]
+
+                        }
+
+                    }
+                },
+
+                Deployment: {
+                    DependsOn: ["ProxyMethod"],
+                        Type: 'AWS::ApiGateway::Deployment',
+                        Properties: {
+                        RestApiId: "!Ref ApiGatewayRestApi",
+                            StageName: "${env:STAGE}"
+                    }
+                }
+            }
         }
-    }
+    }, slsConfig)
 }
