@@ -47,13 +47,13 @@ export async function createSlsYaml (slsConfig: any, keepSlsYaml: boolean) {
 
     // add the sls-configuration to the yml
     Object.keys(slsConfig).forEach(key => {
-        console.log (key);
+        //console.log (key);
         yamlEdit.insertChild(key, slsConfig[key]);
     });
 
     let yamlString = yamlEdit.dump();
 
-    console.log(yamlString);
+    //console.log(yamlString);
 
     await fs.writeFile('serverless.yml', yamlString, function (err) {
         if (err) throw err;

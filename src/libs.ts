@@ -208,7 +208,7 @@ export async function loadConfiguration (configFilePath: string) {
             return undefined;
         });
 
-    console.log("configStr: ", configStr);
+    //console.log("configStr: ", configStr);
 
 
     var config = undefined;
@@ -227,11 +227,11 @@ export async function loadConfiguration (configFilePath: string) {
 export function parseConfig(config: any) {
     if (config && config.default && config.default.props) {
 
-        console.log("found component!", config.default);
+        //console.log("found component!", config.default);
         return loadIsoConfigFromComponent(config.default);
     }
 
-    console.log("found object-config: ",config);
+    //console.log("found object-config: ",config);
     return config;
 }
 
