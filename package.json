@@ -55,6 +55,7 @@
     "serverless": "^1.38.0",
     "serverless-domain-manager": "^2.6.10",
     "serverless-http": "^1.9.1",
+    "serverless-pseudo-parameters": "^2.4.0",
     "serverless-webpack": "^5.2.0",
     "source-map-loader": "^0.2.4",
     "style-loader": "^0.23.1",

@@ -10,6 +10,7 @@ export const SERVERLESS_YML = `service:
 plugins:
   # allows running the stack locally on the dev-machine
   - serverless-offline
+  - serverless-pseudo-parameters
   
 # the custom section
 custom:
@@ -185,6 +186,11 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
         package: {
             include: [
                 `${buildPath}/**/*`
+            ],
+
+            exclude: [
+                ".infrastructure_temp/**/*",
+                "build/main/**/*"
             ]
         },
 
@@ -225,6 +231,8 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
                 // set the STAGE_PATH environment variable to the same we use during the build process
                 STAGE: "${env:STAGE}",
                 STAGE_PATH: "${env:STAGE_PATH, ''}",
+                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.${env:AWS_REGION}.amazonaws.com/${env:STAGE}" ] ]  }'
+
             },
 
             // specifies the rights of the lambda-execution role
