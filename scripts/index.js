@@ -36,6 +36,7 @@ const { loadEnv } = require('../dist/libs');
 const { build } = require('../dist/build');
 const { start } = require('../dist/start');
 const { deploy } = require('../dist/deploy');
+const { init } = require('../dist/init');
 
 if (args.length > 0) {
 

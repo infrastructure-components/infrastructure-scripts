@@ -17,7 +17,7 @@ custom:
   # allows accessing the offline backend when using Docker
   serverless-offline:
     host: 0.0.0.0
-    port: \${env:PORT}
+    port: \${self:provider.PORT, env:PORT, 3000}
 
 package:
 
@@ -209,6 +209,8 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
             }
 
         },
+
+        // TODO put these values into the Environment-Object
 
         provider: {
             // set stage to environment variables
