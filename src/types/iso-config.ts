@@ -1,6 +1,8 @@
 import {resolveAssetsPath, SsrConfig} from "./ssr-config";
 import {complementWebpackConfig, promisify, runWebpack, TEMP_FOLDER} from "../libs";
 import {AppConfig, IClientApp} from "infrastructure-components";
+import * as deepmerge from 'deepmerge';
+
 
 export const ISOCONFIG_SERVERNAME = 'server';
 
@@ -27,7 +29,12 @@ export interface IsoConfig {
     /**
      * specific clientApps that the app consists of
      */
-    clientApps: Array<IClientApp>
+    clientApps: Array<IClientApp>,
+
+    /**
+     * the Data layers that are defined in the app
+     */
+    dataLayers: Array<any>
 
 }
 
@@ -36,6 +43,8 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
     const fs = require('fs');
     const path = require('path');
     const cmd = require('node-cmd');
+    const ReplacePlugin = require('webpack-plugin-replace');
+
 
     // get the current path from the main project
     const pwd = await promisify(callback => cmd.get(`pwd`, callback))
@@ -52,6 +61,7 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
         fs.mkdirSync( tempPath );
     };
 
+    // TODO server hardcoded here!
     const serverPath = path.join(tempPath, "server");
     if ( !fs.existsSync( serverPath ) ) {
         fs.mkdirSync( serverPath );
@@ -62,19 +72,44 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
         configFilePath.replace(/\.[^/.]+$/, "")
     );
 
+    
 
-    ssrConfig["serverConfig"] = {
-        entry: {
-            // TODO refactor this!!!!
-            server: "./"+path.join("node_modules", "infrastructure-components", "dist", "iso_src", "server.js")
-        },
-        name: ISOCONFIG_SERVERNAME
-    }
+    //console.log("replaceValues: " , replaceValues);
+
+
+    // the ssrConfig may already contain a serverConfig! merge it
+    ssrConfig["serverConfig"] = deepmerge.all([
+        ssrConfig.serverConfig !== undefined ? ssrConfig.serverConfig : {},
+        {
+            /*entry: iso.clientApps.reduce((res, app) => {
+                console.log("processing app: " , app);
+                // add to the entry point
+                if (app.dataLayer !== undefined && app.dataLayer) {
+                    console.log("data Layer during config: " ,app.dataLayer );
+                    
+                    // TODO refactor this, external dependency to DynamoDbGraphQlDataLayer
+                    res[app.dataLayer.id] = "./"+path.join("node_modules", "DynamoDbGraphQlDataLayer", "build", "database.js");
+                }
+
+                return res;
+            }, {
+                // we start with the main entry point
+                // TODO refactor this!!!!
+                server: "./"+path.join("node_modules", "infrastructure-components", "dist", "iso_src", "server.js"),
+            }),*/
+            entry: {
+                server: "./"+path.join("node_modules", "infrastructure-components", "dist", "iso_src", "server.js"),
+            },
+            name: ISOCONFIG_SERVERNAME,
+
+
+        }
+    ])
 
     ssrConfig["serverConfig"]["output"] = {
         libraryTarget: "commonjs2",
             path: serverPath,
-            filename: ISOCONFIG_SERVERNAME+'.js'
+            filename: '[name].js'
     };
     ssrConfig["serverConfig"]["resolve"] = {
         alias: {
@@ -82,6 +117,8 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
         }
     };
     ssrConfig["serverConfig"]["target"] = "node";
+    
+
 
     console.log("isoToSsr, run webpack on server config");
     // pack the source code of the isomorphic server
@@ -98,9 +135,33 @@ exports.default = server;`);
     console.log('serverindex created...');
 
 
+    // ATTENTION !! the overwriting the ssrConfig["serverConfig"] here!!!
+
+    /*  NOT REQUIRED ANYMORE for the datalayers have their own entry points now
+     entry: iso.clientApps.reduce((res, app) => {
+
+
+
+     // add to the entry point
+     if (app.dataLayer !== undefined && app.dataLayer) {
+     console.log("data layer in server: " , app.dataLayer)
+
+     res[app.dataLayer.id] = path.join(serverPath, app.dataLayer.id+".js");
+     }
+
+     return res;
+     }, {
+     // we start with the main entry point
+     // TODO refactor this!!!!
+     index: serverIndexPath,
+     }),*/
+
     ssrConfig["serverConfig"] = {
+
+
+        name: ISOCONFIG_SERVERNAME,
         entry: serverIndexPath, //'./src/server/index.tsx',
-        name: 'server'
+        //name: 'server'
     };
 
     var configs: Array<AppConfig> = new Array<AppConfig>();
@@ -113,11 +174,87 @@ exports.default = server;`);
             console.log("app: ", app);
             return await createClientApp(isoConfigPath, tempPath, iso.clientApps[index], index);
         }
-    ));
+        ));
 
+    console.log('now building data layers...');
+
+    // see: ssr-config --> there these temporary apps are finally built!
+    ssrConfig["datalayerConfig"] = await Promise.all(
+        iso.dataLayers.map(async (dl, index) => {
+                
+                console.log("index: ", index);
+                console.log("dataLayer: ", dl);
+                return await createDataLayer(isoConfigPath, tempPath, iso.dataLayers[index], index);
+            }
+        ));
+    
+    
+    console.log("ISOTOSSR: ssrConfig: " , ssrConfig);
 
     return ssrConfig;
 };
+
+/**
+ * @param isoConfigPath: the current path of the user's main app, use it to load the default, entry point, then
+ * you can load the IsoConfig (runtime) from it and get all the objects you need
+ */
+async function createDataLayer(isoConfigPath: string, outputPath: string, dataLayer: any, index: number): Promise<AppConfig> {
+
+    console.log('createDataLayer... ', isoConfigPath);
+
+    const fs = require('fs');
+    const path = require('path');
+    const ReplacePlugin = require('webpack-plugin-replace');
+
+
+    const dlPath = path.join(outputPath, dataLayer.id);
+    if ( !fs.existsSync( dlPath ) ) {
+        fs.mkdirSync( dlPath );
+    }
+
+    const filename = dataLayer.id+".js";
+    const datalayerIndexPath = path.join(dlPath, filename);
+
+
+    // pack the source code of the isomorphic client
+    await runWebpack(complementWebpackConfig({
+        entry: {
+            // TODO refactor this, external dependency to DynamoDbGraphQlDataLayer
+            dataLayer: "./"+path.join("node_modules", "DynamoDbGraphQlDataLayer", "build", "database.js")
+        },
+        output: {
+            libraryTarget: "commonjs2",
+            path: dlPath,
+            filename: filename
+        },
+        resolve: {
+            alias: {
+                IsoConfig: isoConfigPath
+            }
+        },
+        target: "node",
+        plugins: [
+            new ReplacePlugin({
+                values: {
+                    '"INDEX_OF_DATALAYER"': index
+                }
+            })
+        ]
+    }));
+
+    //console.log(createServer(iso, ssrConfig).toString());
+    //return;
+
+    // create an index-file for the server:
+    //console.log("iso: ", iso)
+
+    return {
+        entry: datalayerIndexPath,
+        name: dataLayer.id
+    }
+}
+
+
 
 async function createClientApp(isoConfigPath: string, outputPath: string, app: any, index: number): Promise<AppConfig> {
 
@@ -174,8 +311,6 @@ async function createClientApp(isoConfigPath: string, outputPath: string, app: a
         name: app.id
     }
 }
-
-
 /*
 export async function startIso (isoConfig: IsoConfig, ssrConfig: SsrConfig, keepSlsYaml: boolean) {
 

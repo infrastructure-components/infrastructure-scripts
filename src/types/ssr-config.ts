@@ -35,7 +35,12 @@ export interface SsrConfig {
      * the server-app configuration
      * can be undefined when using higher level isomorphic api
      */
-    serverConfig: AppConfig | undefined
+    serverConfig: AppConfig | undefined,
+
+    /**
+     * the data layers of the ssr-app
+     */
+    datalayerConfig?: AppConfig | Array<AppConfig> | undefined,
 }
 
 export const resolveAssetsPath = (ssrConfig: SsrConfig) => {
@@ -55,6 +60,8 @@ export async function buildSsr (ssrConfig: SsrConfig) {
     // prepare the client(')s(') config(s)
     const clientWpConfig = prepareClientConfig(ssrConfig.clientConfig, ssrConfig.buildPath)
 
+    console.log("buildSsr, server Config BEFORE: ", ssrConfig.serverConfig)
+    
     // preapre the server config
     const serverWpConfig = complementWebpackConfig(toServerWebpackConfig(ssrConfig.serverConfig, ssrConfig.buildPath))
 
@@ -64,6 +71,18 @@ export async function buildSsr (ssrConfig: SsrConfig) {
     } else {
         await runWebpack(clientWpConfig);
     }
+
+
+    const dataLayerWpConfig = prepareDataLayerConfig(ssrConfig.datalayerConfig, ssrConfig.buildPath)
+
+    // build the data layers
+    if (Array.isArray(dataLayerWpConfig)) {
+        await Promise.all(dataLayerWpConfig.map(async c => await runWebpack(c)));
+    } else {
+        await runWebpack(dataLayerWpConfig);
+    }
+
+    console.log("buildSsr, server Config: ", serverWpConfig)
 
 
     // build the server
@@ -128,4 +147,10 @@ export const prepareClientConfig = (clientConfig: AppConfig | Array<AppConfig>, 
     return Array.isArray(clientConfig) ?
         clientConfig.map(c => complementWebpackConfig(toClientWebpackConfig(c, buildPath))) :
         complementWebpackConfig(toClientWebpackConfig(clientConfig, buildPath))
+};
+
+export const prepareDataLayerConfig = (clientConfig: AppConfig | Array<AppConfig>, buildPath: string) => {
+    return Array.isArray(clientConfig) ?
+        clientConfig.map(c => complementWebpackConfig(toServerWebpackConfig(c, buildPath))) :
+        complementWebpackConfig(toServerWebpackConfig(clientConfig, buildPath))
 };

@@ -199,7 +199,7 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
                 // index.default refers to the default export of the file
                 // this requires the server entry point to export as default:
                 // `export default serverless(createServer());`
-                handler: path.join(buildPath,serverConfig.name, "index.default"),
+                handler: path.join(buildPath,serverConfig.name, serverConfig.name+".default"),
                 events: [
                     // this should match the public path in the app-config
                     {http: "ANY /"},
