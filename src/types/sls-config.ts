@@ -17,7 +17,7 @@ custom:
   # allows accessing the offline backend when using Docker
   serverless-offline:
     host: 0.0.0.0
-    port: \${self:provider.PORT, env:PORT, 3000}
+    port: \${self:provider.PORT, env:PORT, '3000'}
 
 package:
 
@@ -167,7 +167,13 @@ export async function startSlsOffline (slsConfig: any, keepSlsYaml: boolean) {
 
 
 
-export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPath: string, assetsPath: string, slsConfig: any) => {
+export const toSlsConfig = (
+    stackName: string,
+    serverConfig: AppConfig,
+    buildPath: string,
+    assetsPath: string,
+    region: string,
+    slsConfig: any) => {
     
     const merge = require('deepmerge');
     const path = require ('path');
@@ -180,7 +186,7 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
         },
 
         custom: {
-            stage: "${env:STAGE}"
+            stage: "${self:provider.STAGE, env:STAGE, 'dev'}"
         },
 
         package: {
@@ -201,7 +207,7 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
                 // `export default serverless(createServer());`
                 handler: path.join(buildPath,serverConfig.name, serverConfig.name+".default"),
                 events: [
-                    // this should match the public path in the app-config
+                    // this should match the public path in the app-config  
                     {http: "ANY /"},
                     {http: "'ANY {proxy+}'"},
                     {cors: "true"},
@@ -214,26 +220,26 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
 
         provider: {
             // set stage to environment variables
-            stage: "${env:STAGE}",
+            //stage: "${env:STAGE}", done through the environment!
 
             // # take the region from the environment variables
-            region: "${env:AWS_REGION}",
+            region: region, //"${env:AWS_REGION}",
 
             // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
-            stackName: "${self:service.name}-${env:STAGE}",
+            stackName: "${self:service.name}-${self:provider.STAGE, env:STAGE, 'dev'}",
 
             // Use a custom name for the API Gateway API
-            apiName: "${self:service.name}-${env:STAGE}-api",
+            apiName: "${self:service.name}-${self:provider.STAGE, env:STAGE, 'dev'}-api",
 
             // name of the static bucket, must match lib/getStaticBucketName
-            staticBucket: `${stackName}-${assetsPath}-`+"${env:STAGE}",
+            staticBucket: `${stackName}-${assetsPath}-`+"${self:provider.STAGE, env:STAGE, 'dev'}",
 
             // set the environment variables
             environment: {
                 // set the STAGE_PATH environment variable to the same we use during the build process
-                STAGE: "${env:STAGE}",
-                STAGE_PATH: "${env:STAGE_PATH, ''}",
-                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.${env:AWS_REGION}.amazonaws.com/${env:STAGE}" ] ]  }'
+                STAGE: "${self:provider.STAGE, env:STAGE, 'dev'}",
+                STAGE_PATH: "${self:provider.STAGE_PATH, env:STAGE_PATH, ''}",
+                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.STAGE, env:STAGE, \'dev\'}" ] ]  }'
 
             },
 
@@ -338,7 +344,7 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
                             },
                             IntegrationHttpMethod: "ANY",
                                 Type: "HTTP_PROXY",
-                                Uri: "https://s3-${env:AWS_REGION}.amazonaws.com/${self:provider.staticBucket}/{proxy}",
+                                Uri: "https://s3-"+region+".amazonaws.com/${self:provider.staticBucket}/{proxy}",
                                 PassthroughBehavior: "WHEN_NO_MATCH",
                                 IntegrationResponses: [{
                                 StatusCode: 200
@@ -354,7 +360,7 @@ export const toSlsConfig = (stackName: string, serverConfig: AppConfig, buildPat
                         Type: 'AWS::ApiGateway::Deployment',
                         Properties: {
                         RestApiId: "!Ref ApiGatewayRestApi",
-                            StageName: "${env:STAGE}"
+                            StageName: "${self:provider.STAGE, env:STAGE, 'dev'}"
                     }
                 }
             }

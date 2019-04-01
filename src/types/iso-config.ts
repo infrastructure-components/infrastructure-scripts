@@ -76,7 +76,6 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
 
     //console.log("replaceValues: " , replaceValues);
 
-
     // the ssrConfig may already contain a serverConfig! merge it
     ssrConfig["serverConfig"] = deepmerge.all([
         ssrConfig.serverConfig !== undefined ? ssrConfig.serverConfig : {},
@@ -220,7 +219,7 @@ async function createDataLayer(isoConfigPath: string, outputPath: string, dataLa
     await runWebpack(complementWebpackConfig({
         entry: {
             // TODO refactor this, external dependency to DynamoDbGraphQlDataLayer
-            dataLayer: "./"+path.join("node_modules", "DynamoDbGraphQlDataLayer", "build", "database.js")
+            dataLayer: "./"+path.join("node_modules", "ddb-gql-data-layer", "build", "database.js")
         },
         output: {
             libraryTarget: "commonjs2",

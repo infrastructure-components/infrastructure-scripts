@@ -26,6 +26,11 @@ export interface SsrConfig {
     assetsPath: string,
 
     /**
+     * the AWS region to deploy to
+     */
+    region?: string,
+
+    /**
      * the SPA-client(s) of the SSR app
      * can be undefined when using higher level isomorphic api
      */
@@ -107,7 +112,7 @@ export async function startSsr (ssrConfig: SsrConfig, slsConfig: any = {}, keepS
 
     // start the sls-config
     startSlsOffline(
-        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath, ssrConfig.assetsPath, slsConfig),
+        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath, ssrConfig.assetsPath, ssrConfig.region, slsConfig),
         keepSlsYaml
     );
 
@@ -119,7 +124,7 @@ export async function deploySsr (ssrConfig: SsrConfig, slsConfig: any = {}, keep
 
     // start the sls-config
     await deploySls(
-        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath, ssrConfig.assetsPath, slsConfig),
+        toSlsConfig(ssrConfig.stackName, ssrConfig.serverConfig, ssrConfig.buildPath, ssrConfig.assetsPath, ssrConfig.region, slsConfig),
         keepSlsYaml
     );
 
@@ -129,9 +134,9 @@ export async function deploySsr (ssrConfig: SsrConfig, slsConfig: any = {}, keep
     console.log("start S3 Sync");
     
     if (Array.isArray(ssrConfig.clientConfig)) {
-        await Promise.all(ssrConfig.clientConfig.map(async c => await s3sync(staticBucketName, getBuildPath(c, ssrConfig.buildPath))));
+        await Promise.all(ssrConfig.clientConfig.map(async c => await s3sync(ssrConfig.region, staticBucketName, getBuildPath(c, ssrConfig.buildPath))));
     } else {
-        s3sync(staticBucketName, getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath));
+        s3sync(ssrConfig.region, staticBucketName, getBuildPath(ssrConfig.clientConfig, ssrConfig.buildPath));
     }
 
 }

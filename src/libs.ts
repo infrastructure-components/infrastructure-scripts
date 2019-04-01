@@ -77,7 +77,7 @@ export function slsLogin () {
  * - STATIC_ASSETS_BUCKET
  * - STAGE
  */
-export async function s3sync (bucket: string, srcFolder: string) {
+export async function s3sync (region, bucket: string, srcFolder: string) {
 
     return new Promise((resolve, reject) => {
         var client = require('s3-node-client').createClient({
@@ -89,7 +89,7 @@ export async function s3sync (bucket: string, srcFolder: string) {
             s3Options: {
                 accessKeyId: process.env.AWS_ACCESS_KEY_ID,
                 secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-                region: process.env.AWS_REGION,
+                region: region,
                 // endpoint: 's3.yourdomain.com',
                 // sslEnabled: false
                 // any other options are passed to new AWS.S3()
@@ -150,6 +150,7 @@ export async function loadConfiguration (configFilePath: string) {
 
     const absolutePath = pwd.toString().replace(/(?:\r\n|\r|\n)/g, "");
 
+    console.log("absolutePath: " , absolutePath);
     //console.log(webpackConfig.module.rules[1]);
 
     // pack the source code of the configuration file. This way, we include all imports/requires!
@@ -177,44 +178,21 @@ export async function loadConfiguration (configFilePath: string) {
         return;
     }
 
-    //console.log("loadConfiguration: run eval!");
+    console.log("loadConfiguration: run eval!");
 
-    const resolvedConfigPath = "./"+path.join(TEMP_FOLDER, 'config.js');
-
-    /*const components = await promisify(callback => cmd.get(`node -e "console.log(eval(require(\\\"./${resolvedConfigPath}\\\")))"`, callback))
-        .then((data) => data)
-        .catch(err => {
-            console.log("err: ", err);
-            return undefined;
-        });
+    const resolvedConfigPath = path.join(absolutePath, TEMP_FOLDER, 'config.js');
+    console.log("path: " , resolvedConfigPath);
 
 
+    var configStr = "";
+    eval (`configStr=JSON.stringify(require("${resolvedConfigPath}"), (name, val) => name ==='type' && typeof val === 'function' ? val.toString() :val)`)
 
-    const components = await promisify(callback => cmd.get(`node -e "require(\\\"${resolvedConfigPath}\\\")"`))
-        .then(data => data)
-        .catch(err => {
-            console.log("err: ", err);
-            return undefined;
-        });
-
-    console.log("components: " , components.default.type({}));*/
-
-    // TODO refactor this. should be possible without node and console.log!
-    //var configStr = "";
-    const configStr = await promisify(callback => cmd.get(`node -e "console.log(JSON.stringify(eval(require(\\\"./${resolvedConfigPath}\\\")), (name, val) => name ==='type' && typeof val === 'function' ? val.toString() :val))"`, callback))
-        .then((data) => data)
-        .catch(err => {
-            console.log("err: ", err);
-            return undefined;
-        });
-
-    //console.log("configStr: ", configStr);
+    console.log("configStr: ", configStr);
 
 
+    // convert the json into an object
     var config = undefined;
     eval('config=' + configStr);
-
-
 
     return parseConfig(config);
 };
@@ -227,11 +205,11 @@ export async function loadConfiguration (configFilePath: string) {
 export function parseConfig(config: any) {
     if (config && config.default && config.default.props) {
 
-        //console.log("found component!", config.default);
+        console.log("found component!", config.default);
         return loadIsoConfigFromComponent(config.default);
     }
 
-    //console.log("found object-config: ",config);
+    console.log("found object-config: ",config);
     return config;
 }
 
