@@ -116,7 +116,7 @@ export async function isoToSsr (configFilePath: string, iso: IsoConfig, ssrConfi
         }
     };
     ssrConfig["serverConfig"]["target"] = "node";
-    
+
 
 
     console.log("isoToSsr, run webpack on server config");

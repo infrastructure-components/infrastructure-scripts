@@ -38,6 +38,8 @@ const { start } = require('../dist/start');
 const { deploy } = require('../dist/deploy');
 const { init } = require('../dist/init');
 
+const { develop } = require('../dist/develop');
+
 if (args.length > 0) {
 
     /**
