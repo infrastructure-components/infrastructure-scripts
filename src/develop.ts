@@ -1,5 +1,6 @@
 
-import { parseConfiguration } from './utils/parser';
+import { loadConfiguration } from './utils/configuration-lib';
+import { parseConfiguration } from "./utils/parser";
 
 /**
  *
@@ -7,26 +8,19 @@ import { parseConfiguration } from './utils/parser';
  */
 export async function develop (configFilePath: string) {
 
-    const config = await parseConfiguration(configFilePath);
+    // load the configuration statically (without objects)
+    const config = await loadConfiguration(configFilePath);
 
     console.log("\n--------------------------------------------------");
-    console.log("parsed config: ", config);
+    console.log("config: ", config);
     console.log("--------------------------------------------------\n");
 
+    // parse the loaded configuration in compile mode (statically)
+    const parsedConfig = await parseConfiguration(config, true);
 
-
-
-    if (config.type === ConfigTypes.ISOMORPHIC && config.ssrConfig !== undefined && config.isoConfig !== undefined) {
-
-        const { isoConfig, ssrConfig } = config;
-
-
-    } else {
-        // TODO implement the build process for higher level APIs
-
-    }
-
-
+    console.log("\n--------------------------------------------------");
+    console.log("parsed config: ", parsedConfig);
+    console.log("--------------------------------------------------\n");
 
 
 };

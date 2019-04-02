@@ -1,71 +1,99 @@
-/**
- * The folder into which we put temporary files
- * @type {string}
- */
-export const TEMP_FOLDER = ".infrastructure_temp";
 
-import { runWebpack } from './webpack-libs';
-import { promisify } from './cmd-libs';
-import { currentAbsolutePath } from './system-libs';
+import * as deepmerge from 'deepmerge';
 
 /**
- * The parser loads the con
+ * parses a configuration, this configuration must export the main component as default
  *
- * @param configFilePath relative path to the webpack.config.js
- * @returns webpack-config-object
+ *
+ * @param component (main component of the configuration)
+ * @param compileMode set to true to run the parser with a statically loaded configuration (without objects)
  */
-export async function parseConfiguration (configFilePath: string) {
-
-    //console.log("loadConfiguration");
-    const path = require('path');
+export function parseConfiguration(configuration: any, compileMode: boolean = true) {
 
 
-    const absolutePath = await currentAbsolutePath();
+    return
 
 
-    //console.log(webpackConfig.module.rules[1]);
+    var arrConfigs = [];
+    const addToTopLevelConfig = (c) => {
+        //console.log("addToTopLevelConfig: ", c);
 
-    // pack the source code of the configuration file. This way, we include all imports/requires!
-    await runWebpack(complementWebpackConfig({
-        entry: {
-            config: "./"+configFilePath
-        },
-        output: {
-            libraryTarget: "commonjs2",
-            path: path.join(absolutePath, TEMP_FOLDER),
-            filename: 'config.js'
-        },
-        target: "node"
-    }));
+        const allowed = ['slsConfig', 'ssrConfig'];
 
-
-    const data = await promisify(callback => cmd.get(`cat ${path.join(absolutePath, TEMP_FOLDER, "config.js")}`, callback))
-        .then((data) => data)
-        .catch(err => {
-            console.log("err: ", err);
-            return undefined;
-        });
-
-    if (!data) {
-        return;
+        arrConfigs.push(Object.keys(c)
+            .filter(key => allowed.includes(key))
+            .reduce((obj, key) => {
+                obj[key] = c[key];
+                return obj;
+            }, {})
+        );
     }
 
-    console.log("loadConfiguration: run eval!");
+    var arrDataLayers = [];
+    const addDataLayer = (dlComponent) => {
+        arrDataLayers.push(dlComponent);
+    }
 
-    const resolvedConfigPath = path.join(absolutePath, TEMP_FOLDER, 'config.js');
-    console.log("path: " , resolvedConfigPath);
+    const clientApps= getChildrenArray(component)
+        .map(child => applyCustomComponents(child, addToTopLevelConfig, addDataLayer, compileMode))
+        .filter(child => isClientApp(child))
+        .map(child => applyClientApp(child));
 
+    //console.log("arrConfigs: " , arrConfigs)
 
-    var configStr = "";
-    eval (`configStr=JSON.stringify(require("${resolvedConfigPath}"), (name, val) => name ==='type' && typeof val === 'function' ? val.toString() :val)`)
+    const result = deepmerge.all([{
+        type: ConfigTypes.ISOMORPHIC,
+        isoConfig: {
+            middlewares: parseMiddlewares(component),
 
-    console.log("configStr: ", configStr);
+            clientApps: clientApps,
 
+            dataLayers: arrDataLayers
+        },
 
-    // convert the json into an object
-    var config = undefined;
-    eval('config=' + configStr);
+        ssrConfig: {
+            stackName: component.props.stackName,
+            buildPath: component.props.buildPath,
+            assetsPath: component.props.assetsPath,
+            region: component.props.region
+        },
 
-    return parseConfig(config);
+        slsConfig: {}
+    }, ...arrConfigs
+    ]);
+
+    //console.log("loaded IsoConfig: " , result);
+    return result;
+
 };
 
+const getClientApps = (baseComponent) => {
+
+};
+
+
+/**
+ * Get the children of the current component as an array
+ *
+ *
+ * @param component the parent component
+ * @return an Array of the children, even if there is only a single child or no (empty array). If the component itself
+ * is an array, its items are returned
+ */
+export const getChildrenArray = (component) => {
+
+    if (component == undefined) {
+        return [];
+    }
+
+    if (Array.isArray(component) && component.length > 0) {
+        //console.log("component is array: ", component)
+        return [...component] ;
+    }
+
+    if (component.props == undefined || component.props.children == undefined) {
+        return [];
+    }
+
+    return Array.isArray(component.props.children) ? component.props.children : [component.props.children];
+};
