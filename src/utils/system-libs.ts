@@ -1,4 +1,5 @@
 
+import { promisify } from './cmd-libs';
 /**
  * runs a command in the node-environment of the calling project
  * @return the absolute path of the current working directory

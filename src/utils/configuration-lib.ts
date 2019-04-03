@@ -1,21 +1,22 @@
-/**
- * The folder into which we put temporary files
- * @type {string}
- */
-
-export const TEMP_FOLDER = ".infrastructure_temp";
 
 import { runWebpack, complementWebpackConfig } from './webpack-libs';
 import { promisify } from './cmd-libs';
 import { currentAbsolutePath } from './system-libs';
 
 /**
- * loads the static configuration from the provided entry-file
+ * The folder into which we put temporary files
+ * @type {string}
+ */
+export const TEMP_FOLDER = ".infrastructure_temp";
+
+
+/**
+ * prepares the configuration from the provided entry-file into a importable ("eval"uable) file
  *
  * @param configFilePath relative path to the webpack.config.js
- * @returns webpack-config-object
+ * @returns path to the created configuration file
  */
-export async function loadConfiguration (configFilePath: string) {
+export async function prepareConfiguration (configFilePath: string) {
 
     //console.log("loadConfiguration");
     const path = require('path');
@@ -42,14 +43,33 @@ export async function loadConfiguration (configFilePath: string) {
     // the path to the packed configuration file
     const resolvedConfigPath = path.join(absolutePath, TEMP_FOLDER, 'config.js');
 
+    return resolvedConfigPath;
+
+
+};
+
+/**
+ * loads the specified configuration into a Javascript object
+ *
+ * @param configFilePath
+ */
+export function loadConfiguration(configFilePath: string) {
+
+    const config = require(configFilePath);
+    return config.default;
+}
+
+/**
+ * loads the configuration as a stringified/jsonified object
+ */
+export function loadStaticConfiguration(configFilePath: string) {
     // load the configuration through stringification/jsonification --> no objects but only static evaluation of definitions
     var configStr = "";
-    eval (`configStr=JSON.stringify(require("${resolvedConfigPath}"), (name, val) => name ==='type' && typeof val === 'function' ? val.toString() :val)`)
+    eval (`configStr=JSON.stringify(require("${configFilePath}"), (name, val) => name ==='type' && typeof val === 'function' ? val.toString() :val)`)
 
     // convert the json into an object
     var config = undefined;
     eval('config=' + configStr);
 
     return config;
-};
-
+}

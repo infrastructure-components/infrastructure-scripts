@@ -1,6 +1,31 @@
 
 import * as deepmerge from 'deepmerge';
 
+import { isPlugin, IPlugin } from '../types/plugin';
+import { loadConfiguration } from './configuration-lib';
+import { IConfigParseResult, mergeParseResults } from '../types/config-parse-result'
+
+/**
+ * parses the configuration for plugins and returns a list of the plugins (objects)
+ *
+ * @param configPath
+ */
+export function parseForPlugins (configPath: string): Array<IPlugin> {
+
+    const config = loadConfiguration(configPath);
+    
+    return extractPlugins(config)
+}
+
+export function extractPlugins(component) {
+
+    if (isPlugin(component)) {
+        return [component]
+    } else {
+        return getChildrenArray(component).reduce((result, child) => result.concat(extractPlugins(child)), [])
+    }
+}
+
 /**
  * parses a configuration, this configuration must export the main component as default
  *
@@ -8,69 +33,25 @@ import * as deepmerge from 'deepmerge';
  * @param component (main component of the configuration)
  * @param compileMode set to true to run the parser with a statically loaded configuration (without objects)
  */
-export function parseConfiguration(configuration: any, compileMode: boolean = true) {
+
+export function extractConfigs(component, plugins, compileMode): IConfigParseResult {
+
+    const results: Array<IConfigParseResult> = plugins
+
+        // check for plugins to apply
+        .filter(plugin => plugin.applies(component))
+
+        // apply applicable plugins
+        .map(plugin => {
+            const childConfigs = getChildrenArray(component).map(child => extractConfigs(child, plugins, compileMode))
+            return plugin.process(component, childConfigs, compileMode)
+        })
 
 
-    return
+    return mergeParseResults(results);
 
-
-    var arrConfigs = [];
-    const addToTopLevelConfig = (c) => {
-        //console.log("addToTopLevelConfig: ", c);
-
-        const allowed = ['slsConfig', 'ssrConfig'];
-
-        arrConfigs.push(Object.keys(c)
-            .filter(key => allowed.includes(key))
-            .reduce((obj, key) => {
-                obj[key] = c[key];
-                return obj;
-            }, {})
-        );
-    }
-
-    var arrDataLayers = [];
-    const addDataLayer = (dlComponent) => {
-        arrDataLayers.push(dlComponent);
-    }
-
-    const clientApps= getChildrenArray(component)
-        .map(child => applyCustomComponents(child, addToTopLevelConfig, addDataLayer, compileMode))
-        .filter(child => isClientApp(child))
-        .map(child => applyClientApp(child));
-
-    //console.log("arrConfigs: " , arrConfigs)
-
-    const result = deepmerge.all([{
-        type: ConfigTypes.ISOMORPHIC,
-        isoConfig: {
-            middlewares: parseMiddlewares(component),
-
-            clientApps: clientApps,
-
-            dataLayers: arrDataLayers
-        },
-
-        ssrConfig: {
-            stackName: component.props.stackName,
-            buildPath: component.props.buildPath,
-            assetsPath: component.props.assetsPath,
-            region: component.props.region
-        },
-
-        slsConfig: {}
-    }, ...arrConfigs
-    ]);
-
-    //console.log("loaded IsoConfig: " , result);
-    return result;
 
 };
-
-const getClientApps = (baseComponent) => {
-
-};
-
 
 /**
  * Get the children of the current component as an array

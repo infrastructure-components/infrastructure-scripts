@@ -36,26 +36,6 @@ export function runWebpack (webpackConfig) {
     });
 }
 
-export const toServerWebpackConfig = (config: AppConfig, buildPath: string) => {
-
-    // here we need to take care of multiple entries
-
-
-
-    return {
-        /*entry: {
-            handler: config.entry
-        },*/
-        entry: config.entry,
-        output: {
-            libraryTarget: "commonjs2",
-            path: getBuildPath(config, buildPath),
-            filename: getServerFilename(config.name), //'[name].js',
-            publicPath: '/'
-        },
-        target: "node"
-    }
-
 
 export function complementWebpackConfig(webpackConfig: any) {
     if (webpackConfig !== undefined) {
