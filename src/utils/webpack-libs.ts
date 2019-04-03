@@ -36,6 +36,80 @@ export function runWebpack (webpackConfig) {
     });
 }
 
+/**
+ * creates a basic webpack-configuration of a WebApp. Must be complemented using [[complementWebpackConfig]]
+ *
+ * @param entryPath the path to the entry-point (e.g. to index.js)
+ * @param buildPath
+ * @param appName
+ * @param aliasDict a js-object whose keys are resolved to their values when importing them
+ * @param replaceDict a js-object whose keys are replaced by their values
+ */
+export const createClientWebpackConfig = (
+    entryPath: string, buildPath: string, appName: string, aliasDict: any, replaceDict: any) => {
+
+    const fs = require('fs');
+    const path = require('path');
+
+    const clientPath = path.join(buildPath, appName);
+
+    const ReplacePlugin = require('webpack-plugin-replace');
+
+    return {
+        entry: {
+            app: entryPath
+        },
+        output: {
+            path: clientPath,
+            filename: appName+".js"
+        },
+        resolve: {
+            alias: aliasDict,
+        },
+        plugins: [
+            new ReplacePlugin({
+                values: replaceDict
+            })
+        ],
+        /*node: {
+            assert: 'empty',
+            buffer: 'empty',
+            child_process: 'empty',
+            cluster: 'empty',
+            constants: 'empty',
+            crypto: 'empty',
+            dgram: 'empty',
+            dns: 'empty',
+            domain: 'empty',
+            events: 'empty',
+            fs: 'empty',
+            http: 'empty',
+            https: 'empty',
+            module: 'empty',
+            net: 'empty',
+            os: 'empty',
+            path: 'empty',
+            process: false,
+            punycode: 'empty',
+            querystring: 'empty',
+            readline: 'empty',
+            repl: 'empty',
+            stream: 'empty',
+            string_decoder: 'empty',
+            sys: 'empty',
+            timers: 'empty',
+            tls: 'empty',
+            tty: 'empty',
+            url: 'empty',
+            util: 'empty',
+            vm: 'empty',
+            zlib: 'empty'
+        },*/
+        target: "web"
+    };
+
+};
+
 
 export function complementWebpackConfig(webpackConfig: any) {
     if (webpackConfig !== undefined) {
@@ -54,10 +128,10 @@ export function complementWebpackConfig(webpackConfig: any) {
         webpackConfig.devtool = 'source-map';
 
         if (webpackConfig.resolve !== undefined) {
-            webpackConfig.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx'];
+            webpackConfig.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx', ]; //'.json'
         } else {
             webpackConfig.resolve = {
-                extensions: ['.js', '.jsx', '.ts', '.tsx', "mjs"]
+                extensions: ['.js', '.jsx', '.ts', '.tsx']
             };
         }
 

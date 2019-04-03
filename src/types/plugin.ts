@@ -1,12 +1,5 @@
 import { IConfigParseResult } from './config-parse-result';
 
-export const isPlugin = (component): boolean => {
-    if (component !== undefined && component.props !== undefined) {
-        // TODO evaluate whether the provided component is a plugin
-    }
-
-    return false;
-}
 
 export interface IPlugin {
 
@@ -26,9 +19,5 @@ export interface IPlugin {
      * type: Array<{Array<slsConfigs>, Array<webpackConfigs>, Array<postBuilds>}>
      * @param compileMode boolean, if true, the components have beeen loaded statically only!
      */
-    process: (component: any, childConfigs: Array<IConfigParseResult>, compileMode: boolean) => IConfigParseResult,
-}
-
-export function implementsInterface (component, iface) {
-    return iface.keys().every(key => component[key] !== undefined)
+    process: (component: any, childConfigs: Array<IConfigParseResult>, infrastructureMode: string | undefined) => IConfigParseResult,
 }

@@ -27,9 +27,11 @@ export interface IConfigParseResult {
  */
 export function mergeParseResults(results: Array<IConfigParseResult>) {
 
+    console.log("mergeParseResults: ", results);
+
     return results.reduce((merged, item) => {
         return {
-            slsConfigs: deepmerge.all(merged.slsConfigs, item.slsConfigs),
+            slsConfigs: deepmerge.all([merged.slsConfigs, item.slsConfigs]),
             webpackConfigs: merged.webpackConfigs.concat(item.webpackConfigs),
             postBuilds: merged.postBuilds.concat(item.postBuilds)
         }

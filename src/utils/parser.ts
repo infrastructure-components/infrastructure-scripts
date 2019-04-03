@@ -1,9 +1,22 @@
 
 import * as deepmerge from 'deepmerge';
 
-import { isPlugin, IPlugin } from '../types/plugin';
+import { IPlugin } from '../types/plugin';
 import { loadConfiguration } from './configuration-lib';
 import { IConfigParseResult, mergeParseResults } from '../types/config-parse-result'
+import { extractPlugins, isAppConfig } from "../types/app";
+
+export const INFRASTRUCTURE_MODES = {
+    /**
+     * When packing the application
+     */
+    COMPILATION : "COMPILATION",
+
+    /**
+     * when the app actually runs
+     */
+    RUNTIME: "RUNTIME"
+}
 
 /**
  * parses the configuration for plugins and returns a list of the plugins (objects)
@@ -13,18 +26,48 @@ import { IConfigParseResult, mergeParseResults } from '../types/config-parse-res
 export function parseForPlugins (configPath: string): Array<IPlugin> {
 
     const config = loadConfiguration(configPath);
-    
-    return extractPlugins(config)
-}
 
-export function extractPlugins(component) {
+    const parsedComponent = parseInfrastructureComponent(config, INFRASTRUCTURE_MODES.COMPILATION);
 
-    if (isPlugin(component)) {
-        return [component]
+    if (isAppConfig(parsedComponent)) {
+        return extractPlugins(parsedComponent, configPath);
+
     } else {
-        return getChildrenArray(component).reduce((result, child) => result.concat(extractPlugins(child)), [])
+        console.error("main component is not a valid app!")
+        return [];
+    }
+
+};
+
+export const parseInfrastructureComponent = (component, infrastructureMode: string | undefined) => {
+    try {
+
+        //console.log("parseInfrastructureComponent: ", component);
+
+        const params = Object.assign({
+            infrastructureMode: infrastructureMode,
+        }, component.props);
+
+        /*
+        var custom = undefined;
+        const parsed = `const f=${component.type}; f(${JSON.stringify(params)})`;
+
+        const result = eval(parsed);*/
+
+        const result = component.type(params);
+
+        //
+        //console.log("parsed: ", parsed);
+        console.log("parsed InfrastructureComponent: ", result);
+
+        return result.infrastructureType !== undefined ? result : undefined;
+
+    } catch (error) {
+        console.error("NOT an infrastructure component --> ", error);
+        return undefined;
     }
 }
+
 
 /**
  * parses a configuration, this configuration must export the main component as default
@@ -34,7 +77,7 @@ export function extractPlugins(component) {
  * @param compileMode set to true to run the parser with a statically loaded configuration (without objects)
  */
 
-export function extractConfigs(component, plugins, compileMode): IConfigParseResult {
+export function extractConfigs(component, plugins, infrastructureMode: string | undefined): IConfigParseResult {
 
     const results: Array<IConfigParseResult> = plugins
 
@@ -43,13 +86,14 @@ export function extractConfigs(component, plugins, compileMode): IConfigParseRes
 
         // apply applicable plugins
         .map(plugin => {
-            const childConfigs = getChildrenArray(component).map(child => extractConfigs(child, plugins, compileMode))
-            return plugin.process(component, childConfigs, compileMode)
+            const childConfigs = getChildrenArray(component).map(child => extractConfigs(child, plugins, infrastructureMode))
+            const r= plugin.process(component, childConfigs, infrastructureMode);
+            console.log("result: ", r);
+            return r;
         })
 
 
     return mergeParseResults(results);
-
 
 };
 
