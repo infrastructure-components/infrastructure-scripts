@@ -21,16 +21,19 @@ export const INFRASTRUCTURE_MODES = {
 /**
  * parses the configuration for plugins and returns a list of the plugins (objects)
  *
- * @param configPath
+ * @param configPath the path to the compiled and evaluable configuration
+ * @param origConfigPath the path to the original uncompiled configuration source!
  */
-export function parseForPlugins (configPath: string): Array<IPlugin> {
+export function parseForPlugins (configPath: string, origConfigPath: string): Array<IPlugin> {
 
     const config = loadConfiguration(configPath);
 
     const parsedComponent = parseInfrastructureComponent(config, INFRASTRUCTURE_MODES.COMPILATION);
 
+    //console.log("configPath: ", configPath);
+
     if (isAppConfig(parsedComponent)) {
-        return extractPlugins(parsedComponent, configPath);
+        return extractPlugins(parsedComponent, origConfigPath);
 
     } else {
         console.error("main component is not a valid app!")

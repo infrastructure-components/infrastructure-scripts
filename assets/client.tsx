@@ -1,7 +1,8 @@
 //import {getChildrenArray, INFRASTRUCTURE_MODES, parseInfrastructureComponent} from "../utils/parser";
 
 const extractWebApp = (component) => {
-    const webAppId = "WEB_APP_ID"; // this constant is replaced during compilation
+    
+    const webAppId = WEB_APP_ID; // this constant is replaced during compilation
 /*
     // get an infrastructure-component or undefined if it is not...
     const parsedComponent = parseInfrastructureComponent(component, INFRASTRUCTURE_MODES.RUNTIME);
@@ -50,8 +51,7 @@ import "@babel/polyfill";
 import React from 'react';
 import { hydrate } from 'react-dom';
 import { createClientApp } from './routed-app';
-import {extractPlugins, isAppConfig} from "../types/app";
-import {isWebAppConfig} from "../types/webapp";
+//import {isWebAppConfig} from "../types/webapp";
 
 /**
  * For a not yet known reason (maybe because compiled on "web"), this module must not import anything
@@ -73,7 +73,7 @@ const createClientWebApp = () => {
 
     // TODO NOTE: we use a compiled version of the configuration here, may cause the context-problem??!
     // the IsoConfig is the overall configuration! this path is replaced by the webapp-plugin
-    const IsoConfig = require('IsoConfig');
+    var IsoConfig = require('IsoConfig');
     const webApp = {
         routes: [],
         redirects: []

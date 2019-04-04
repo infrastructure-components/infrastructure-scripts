@@ -46,69 +46,78 @@ export function runWebpack (webpackConfig) {
  * @param replaceDict a js-object whose keys are replaced by their values
  */
 export const createClientWebpackConfig = (
-    entryPath: string, buildPath: string, appName: string, aliasDict: any, replaceDict: any) => {
+    entryPath: string,
+    buildPath: string,
+    appName: string,
+    aliasDict: any,
+    replaceDict: any) => {
 
-    const fs = require('fs');
     const path = require('path');
-
     const clientPath = path.join(buildPath, appName);
 
-    const ReplacePlugin = require('webpack-plugin-replace');
+    return Object.assign(
+        createWebpackConfig(entryPath, aliasDict, replaceDict),
+        {
+            output: {
+                path: clientPath,
+                filename: appName+".bundle.js"
+            },
+            target: "web"
+        }
+    );
+
+};
+
+export const createServerWebpackConfig = (
+    entryPath: string,
+    buildPath: string,
+    appName: string,
+    aliasDict: any,
+    replaceDict: any) => {
+
+    const path = require('path');
+    const serverPath = path.join(buildPath, appName);
+
+    return Object.assign(
+        createWebpackConfig(entryPath, aliasDict, replaceDict),
+        {
+            output: {
+                libraryTarget: "commonjs2",
+                path: serverPath,
+                filename: appName+".js",
+                publicPath: '/'
+            },
+            target: "node"
+        }
+    );
+
+}
+
+
+export const createWebpackConfig = (
+    entryPath: string,
+    aliasDict: any,
+    replaceDict: any) => {
+
+    const webpack = require('webpack');
 
     return {
-        entry: {
-            app: entryPath
-        },
-        output: {
-            path: clientPath,
-            filename: appName+".js"
-        },
+        entry: entryPath,
         resolve: {
             alias: aliasDict,
         },
         plugins: [
-            new ReplacePlugin({
-                values: replaceDict
-            })
-        ],
-        /*node: {
-            assert: 'empty',
-            buffer: 'empty',
-            child_process: 'empty',
-            cluster: 'empty',
-            constants: 'empty',
-            crypto: 'empty',
-            dgram: 'empty',
-            dns: 'empty',
-            domain: 'empty',
-            events: 'empty',
-            fs: 'empty',
-            http: 'empty',
-            https: 'empty',
-            module: 'empty',
-            net: 'empty',
-            os: 'empty',
-            path: 'empty',
-            process: false,
-            punycode: 'empty',
-            querystring: 'empty',
-            readline: 'empty',
-            repl: 'empty',
-            stream: 'empty',
-            string_decoder: 'empty',
-            sys: 'empty',
-            timers: 'empty',
-            tls: 'empty',
-            tty: 'empty',
-            url: 'empty',
-            util: 'empty',
-            vm: 'empty',
-            zlib: 'empty'
-        },*/
-        target: "web"
+            new webpack.DefinePlugin(replaceDict),
+
+            // TODO see: https://remarkablemark.org/blog/2017/02/25/webpack-ignore-module/
+            // TODO get the list of plugins programmatically, not hard-coded like now!
+            new webpack.IgnorePlugin(/iso-plugin/),
+            new webpack.IgnorePlugin(/webapp-plugin/),
+        ]
     };
 
 };
+
 
 
 export function complementWebpackConfig(webpackConfig: any) {

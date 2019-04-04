@@ -14,7 +14,7 @@ export async function develop (configFilePath: string) {
     const configPath = await prepareConfiguration(configFilePath);
 
     // parse the configuration for plugins
-    const plugins = parseForPlugins(configPath);
+    const plugins = parseForPlugins(configPath, configFilePath);
     console.log("plugins: ", plugins);
 
     // load the configuration statically (without objects)
@@ -33,6 +33,7 @@ export async function develop (configFilePath: string) {
     // now run the webpacks
     await Promise.all(parsedConfig.webpackConfigs.map(async wpConfig => {
         //console.log("wpConfig: ", wpConfig);
+        
         await runWebpack(wpConfig)
     }));
 

@@ -20,6 +20,7 @@ export const isAppConfig = (parsedComponent): boolean => {
 
 
 export function extractPlugins(app: IApp, configPath: string) {
+    
     return app.createPlugins(configPath);
 }
 

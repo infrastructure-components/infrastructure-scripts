@@ -7,7 +7,7 @@ import {createClientWebpackConfig, complementWebpackConfig} from "../utils/webpa
 /**
  * Parameters that apply to the whole Plugin, passed by other plugins
  */
-export interface WebAppPlugin {
+export interface IWebAppPlugin {
 
     /**
      * path to a directory where we put the final bundles
@@ -24,7 +24,7 @@ export interface WebAppPlugin {
  * A Plugin to detect WebApp-Components
  * @param props
  */
-export const WebAppPlugin = (props: any): IPlugin => {
+export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
     const path = require('path');
 
     const result: IPlugin = {
@@ -50,20 +50,20 @@ export const WebAppPlugin = (props: any): IPlugin => {
 
             console.log("isoConfigPath: ", isoConfigPath);
 
+            console.log("id: " , component.props.id)
             return {
                 slsConfigs: [],
 
                 // a webapp has its own webpack configuration
                 webpackConfigs: [
                     complementWebpackConfig(createClientWebpackConfig(
-                        "./"+path.join("node_modules", "infrastructure-scripts", "dist", "webapp", "client.js"), //entryPath: string,
+                        "./"+path.join("node_modules", "infrastructure-scripts", "assets", "client.tsx"), //entryPath: string,
                         path.join(absolutePath, props.buildPath), //use the buildpath from the parent plugin
                         component.props.id,
                         {
                             IsoConfig: isoConfigPath // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
-                        },
-                        {
-                            '"WEB_APP_ID"': component.props.id // replace the webAppId-placeholder
+                        }, {
+                            WEB_APP_ID: `"${component.props.id}"` // replace the webAppId-placeholder
                         }
                     ))
                 ],

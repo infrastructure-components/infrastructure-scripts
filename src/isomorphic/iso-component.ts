@@ -45,7 +45,10 @@ export default (props: IIsomorphic | any) => {
         // only load plugins during compilation
         createPlugins: (configPath: string) => props.infrastructureMode === "COMPILATION" ? [
             // be able to process IsomorphicApps (as top-level-node)
-            IsoPlugin({}),
+            IsoPlugin({
+                buildPath: props.buildPath,
+                configFilePath: configPath
+            }),
 
             // isomorphic apps can have webapps (i.e. clients!)
             WebAppPlugin({
