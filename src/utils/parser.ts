@@ -101,6 +101,19 @@ export function extractConfigs(component, plugins, infrastructureMode: string | 
 };
 
 /**
+ * Get the objects from the configuration
+ *
+ * This function runs on the compiled/webpacked bundle (Plugins removed!!)
+ *
+ * @param component
+ */
+export function extractObjects(component) {
+    return {
+
+    }
+}
+
+/**
  * Get the children of the current component as an array
  *
  *
