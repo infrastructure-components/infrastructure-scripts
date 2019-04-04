@@ -1,6 +1,5 @@
 
 import { runWebpack, complementWebpackConfig } from './webpack-libs';
-import { promisify } from './cmd-libs';
 import { currentAbsolutePath } from './system-libs';
 
 /**

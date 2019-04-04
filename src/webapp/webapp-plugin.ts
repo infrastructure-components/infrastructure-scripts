@@ -1,8 +1,9 @@
 
-import { IPlugin } from '../types/plugin';
-import { IConfigParseResult } from '../types/config-parse-result';
+import { IPlugin } from '../utils/plugin';
+import { IConfigParseResult } from '../utils/config-parse-result';
 import { IWebApp, isWebApp } from './webapp-component';
-import {createClientWebpackConfig, complementWebpackConfig} from "../utils/webpack-libs";
+import { createClientWebpackConfig, complementWebpackConfig } from "../utils/webpack-libs";
+import {currentAbsolutePath, pathToConfigFile} from "../utils/system-libs";
 
 /**
  * Parameters that apply to the whole Plugin, passed by other plugins
@@ -35,22 +36,9 @@ export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
         },
 
         // convert the component into configuration parts
+        // while the component is of Type `any`, its props must be of type `IWebApp`
         process: (component: any, childConfigs: Array<IConfigParseResult>, infrastructureMode: string | undefined): IConfigParseResult => {
 
-            console.log("found webapp: ", component);
-
-            // get the current path (at compilation time)
-            const absolutePath = process.cwd().toString().replace(/(?:\r\n|\r|\n)/g, "");
-
-            // where do we find the webpacked-configuration?
-            const isoConfigPath = path.resolve(
-                absolutePath,
-                props.configFilePath.replace(/\.[^/.]+$/, "")
-            );
-
-            console.log("isoConfigPath: ", isoConfigPath);
-
-            console.log("id: " , component.props.id)
             return {
                 slsConfigs: [],
 
@@ -58,10 +46,10 @@ export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
                 webpackConfigs: [
                     complementWebpackConfig(createClientWebpackConfig(
                         "./"+path.join("node_modules", "infrastructure-scripts", "assets", "client.tsx"), //entryPath: string,
-                        path.join(absolutePath, props.buildPath), //use the buildpath from the parent plugin
+                        path.join(currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
                         component.props.id,
                         {
-                            IsoConfig: isoConfigPath // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
+                            __CONFIG_FILE_PATH__: pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
                         }, {
                             WEB_APP_ID: `"${component.props.id}"` // replace the webAppId-placeholder
                         }

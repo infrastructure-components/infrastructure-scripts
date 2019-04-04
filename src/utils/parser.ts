@@ -1,10 +1,10 @@
 
 import * as deepmerge from 'deepmerge';
 
-import { IPlugin } from '../types/plugin';
+import { IPlugin } from './plugin';
 import { loadConfiguration } from './configuration-lib';
-import { IConfigParseResult, mergeParseResults } from '../types/config-parse-result'
-import { extractPlugins, isAppConfig } from "../types/app";
+import { IConfigParseResult, mergeParseResults } from './config-parse-result'
+import { extractPlugins, isInfrastructure } from "../types/infrastructure";
 
 export const INFRASTRUCTURE_MODES = {
     /**
@@ -32,7 +32,7 @@ export function parseForPlugins (configPath: string, origConfigPath: string): Ar
 
     //console.log("configPath: ", configPath);
 
-    if (isAppConfig(parsedComponent)) {
+    if (isInfrastructure(parsedComponent)) {
         return extractPlugins(parsedComponent, origConfigPath);
 
     } else {

@@ -1,3 +1,7 @@
+/**
+ * TODO LEGACY PART
+ */
+
 import { YamlEditor } from '../yaml-edit';
 import {AppConfig } from "infrastructure-components";
 import { slsLogin, s3sync } from '../libs';

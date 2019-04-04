@@ -1,8 +1,8 @@
 
 import { prepareConfiguration, loadStaticConfiguration } from './utils/configuration-lib';
 import {parseForPlugins, extractConfigs, INFRASTRUCTURE_MODES} from "./utils/parser";
-import { IConfigParseResult } from './types/config-parse-result';
-import {runWebpack} from "./libs";
+import { IConfigParseResult } from './utils/config-parse-result';
+import {runWebpack} from "./utils/webpack-libs";
 
 /**
  *

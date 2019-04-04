@@ -1,3 +1,7 @@
+/**
+ * TODO LEGACY PART
+ */
+
 import {AppConfig, IClientApp} from "infrastructure-components";
 
 

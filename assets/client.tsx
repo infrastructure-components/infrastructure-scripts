@@ -73,7 +73,7 @@ const createClientWebApp = () => {
 
     // TODO NOTE: we use a compiled version of the configuration here, may cause the context-problem??!
     // the IsoConfig is the overall configuration! this path is replaced by the webapp-plugin
-    var IsoConfig = require('IsoConfig');
+    var IsoConfig = require('__CONFIG_FILE_PATH__');
     const webApp = {
         routes: [],
         redirects: []

@@ -1,3 +1,6 @@
+/**
+ * TODO LEGACY PART
+ */
 
 import { AppConfig, toClientWebpackConfig, toServerWebpackConfig, getBuildPath } from 'infrastructure-components';
 import {complementWebpackConfig, runWebpack, copyAssets, s3sync, getStaticBucketName} from '../libs';

@@ -40,7 +40,7 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
     })
     /*
     // connect the middlewares
-    var IsoConfig = require('IsoConfig');
+    var IsoConfig = require('__CONFIG_FILE_PATH__');
     if (IsoConfig && IsoConfig.default && IsoConfig.default.props) {
         console.log("found component!");
         IsoConfig = loadIsoConfigFromComponent(IsoConfig.default, false);

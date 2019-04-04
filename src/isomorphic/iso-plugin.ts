@@ -1,10 +1,11 @@
 
-import { IPlugin } from '../types/plugin';
-import { IConfigParseResult } from '../types/config-parse-result';
+import { IPlugin } from '../utils/plugin';
+import { IConfigParseResult } from '../utils/config-parse-result';
 import { IIsomorphic, isIsomorphicApp } from './iso-component';
 import { toSlsConfig } from "../utils/sls-libs";
-import {createServerWebpackConfig, complementWebpackConfig} from "../utils/webpack-libs";
-import  { resolveAssetsPath } from '../utils/iso-libs';
+import { createServerWebpackConfig, complementWebpackConfig } from "../utils/webpack-libs";
+import { resolveAssetsPath } from '../utils/iso-libs';
+import {currentAbsolutePath, pathToConfigFile} from "../utils/system-libs";
 
 /**
  * Parameters that apply to the whole Plugin, passed by other plugins
@@ -39,30 +40,25 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
         process: (component: any, childConfigs: Array<IConfigParseResult>, infrastructureMode: string | undefined): IConfigParseResult => {
 
             const path = require('path');
-            // get the current path (at compilation time)
-            const absolutePath = process.cwd().toString().replace(/(?:\r\n|\r|\n)/g, "");
 
-            // where do we find the webpacked-configuration?
-            const isoConfigPath = path.resolve(
-                absolutePath,
-                props.configFilePath.replace(/\.[^/.]+$/, "")
-            );
-
-            console.log("isoConfigPath: ", isoConfigPath);
-            //console.log("found iso: ", component);
-
+            // we use the hardcoded name `server` as name
+            const serverName = "server";
 
             // the isomorphic app has a server application
             const serverWebPack = complementWebpackConfig(
                 createServerWebpackConfig(
                     "./"+path.join("node_modules", "infrastructure-scripts", "assets", "server.tsx"), //entryPath: string,
-                    path.join(absolutePath, props.buildPath), //use the buildpath from the parent plugin
-                    component.props.stackName, // name of the server
+                    path.join(currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
+                    serverName, // name of the server
                     {
-                        IsoConfig: isoConfigPath // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
+                        __CONFIG_FILE_PATH__: pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
                     }, {
                         __ASSETS_PATH__: `"${component.props.assetsPath}"`,
-                        __RESOLVED_ASSETS_PATH__: `"${resolveAssetsPath(component.props.buildPath, component.props.stackName, component.props.assetsPath ) }"`
+                        __RESOLVED_ASSETS_PATH__: `"${resolveAssetsPath(
+                            component.props.buildPath,
+                            serverName, 
+                            component.props.assetsPath ) 
+                        }"`
                     }
                 )
             );
@@ -71,7 +67,7 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
                 slsConfigs: [
                     toSlsConfig(
                         component.props.stackName,
-                        component.props.stackName, // we use the stackname as name of the server-app, too!
+                        serverName,
                         component.props.buildPath,
                         component.props.assetsPath,
                         component.props.region),

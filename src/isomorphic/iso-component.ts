@@ -1,10 +1,16 @@
 import React, {ReactNode} from 'react';
-import {IApp, INFRASTRUCTURE_TYPE_APP} from '../types/app';
+
+import Types from '../types';
+import { IInfrastructure } from "../types/infrastructure";
+
 
 import { IsoPlugin } from './iso-plugin';
 import { WebAppPlugin } from '../webapp/webapp-plugin';
+
+
 /**
  * Specifies all the properties that an Isomorphic-Component must have
+ * These are specified by the user
  */
 export interface IIsomorphic {
 
@@ -31,7 +37,7 @@ export interface IIsomorphic {
 
 
 /**
- * The IsomorphicApp is an app and must implement [[IApp]]
+ * The IsomorphicApp is an infrastructure and must implement [[IInfrastructure]]
  *
  * @param props
  */
@@ -39,8 +45,10 @@ export default (props: IIsomorphic | any) => {
 
     console.log ("isomorphic: ",props );
 
-    const appProps: IApp = {
-        infrastructureType: INFRASTRUCTURE_TYPE_APP,
+    const appProps: IInfrastructure = {
+
+        // allows to identify this component as Infrastructure
+        infrastructureType: Types.INFRASTRUCTURE_TYPE_INFRASTRUCTURE,
 
         // only load plugins during compilation
         createPlugins: (configPath: string) => props.infrastructureMode === "COMPILATION" ? [
@@ -55,6 +63,7 @@ export default (props: IIsomorphic | any) => {
                 buildPath: props.buildPath,
                 configFilePath: configPath
             })
+
         ] : []
     };
 

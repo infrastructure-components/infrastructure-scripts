@@ -1,3 +1,7 @@
+/**
+ * TODO LEGACY PART
+ */
+
 import {resolveAssetsPath, SsrConfig} from "./ssr-config";
 import {complementWebpackConfig, promisify, runWebpack, TEMP_FOLDER} from "../libs";
 import {AppConfig, IClientApp} from "infrastructure-components";

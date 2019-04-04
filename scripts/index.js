@@ -30,14 +30,14 @@
 // get the provided args
 const [,,...args] = process.argv;
 
-const { loadEnv } = require('../dist/libs');
+const { loadEnv } = require('../dist/utils/system-libs');
 
 // these are the commands that can be executed
-const { build } = require('../dist/build');
+/*const { build } = require('../dist/build');
 const { start } = require('../dist/start');
 const { deploy } = require('../dist/deploy');
 const { init } = require('../dist/init');
-
+*/
 const { develop } = require('../dist/develop');
 
 if (args.length > 0) {
