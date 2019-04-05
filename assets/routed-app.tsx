@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 
 import { StaticRouter, matchPath } from 'react-router';
-import { Switch, Route, BrowserRouter } from 'react-router-dom';
+import { Switch, Route, BrowserRouter, Link } from 'react-router-dom';
 
 import RedirectWithStatus from './redirect-w-status';
 import AttachRequest from './attach-request';
@@ -82,7 +82,7 @@ const RoutedApp: React.SFC<RoutedAppProps> = (props) => {
     //.filter(({ customType }) => customType !== Types.IFRAME)
 
     const routes = props.routes.map(({ path, exact, component, render }, i) => {
-        //console.log("component, ", component)
+        console.log("routepath: ", path)
         // NOT using routeConfig.pathToRoute(path) for the Router includes a basename already!
         return render !== undefined ? <Route key={'ROUTE_'+i} exact={exact} path={path} render={render} /> :
             <Route key={'ROUTE_'+i} exact={exact} path={path} component={component} />
@@ -94,6 +94,7 @@ const RoutedApp: React.SFC<RoutedAppProps> = (props) => {
 
 
     return <Switch>
+        <Route exact={true} path="/test" render={ (props) =><Link to="/">Test</Link>} />
         {routes}
         {redirects}
     </Switch>;
