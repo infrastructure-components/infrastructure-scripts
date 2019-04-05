@@ -48,17 +48,6 @@ export async function prepareConfiguration (configFilePath: string) {
 };
 
 /**
- * loads the specified configuration into a Javascript object
- *
- * @param configFilePath
- */
-export function loadConfiguration(configFilePath: string) {
-
-    const config = require(configFilePath);
-    return config.default;
-}
-
-/**
  * loads the configuration as a stringified/jsonified object
  */
 export function loadStaticConfiguration(configFilePath: string) {

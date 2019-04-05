@@ -1,7 +1,7 @@
 
 import { IPlugin } from '../utils/plugin';
 import { IConfigParseResult } from '../utils/config-parse-result';
-import { IIsomorphic, isIsomorphicApp } from './iso-component';
+import { isIsomorphicApp } from './iso-component';
 import { toSlsConfig } from "../utils/sls-libs";
 import { createServerWebpackConfig, complementWebpackConfig } from "../utils/webpack-libs";
 import { resolveAssetsPath } from '../utils/iso-libs';
@@ -53,11 +53,12 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
                     {
                         __CONFIG_FILE_PATH__: pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
                     }, {
-                        __ASSETS_PATH__: `"${component.props.assetsPath}"`,
+                        __ISOMORPHIC_ID__: `"${component.instanceId}"`,
+                        __ASSETS_PATH__: `"${component.assetsPath}"`,
                         __RESOLVED_ASSETS_PATH__: `"${resolveAssetsPath(
-                            component.props.buildPath,
+                            component.buildPath,
                             serverName, 
-                            component.props.assetsPath ) 
+                            component.assetsPath ) 
                         }"`
                     }
                 )
@@ -66,11 +67,11 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
             return {
                 slsConfigs: [
                     toSlsConfig(
-                        component.props.stackName,
+                        component.stackName,
                         serverName,
-                        component.props.buildPath,
-                        component.props.assetsPath,
-                        component.props.region),
+                        component.buildPath,
+                        component.assetsPath,
+                        component.region),
 
                     ...childConfigs.map(config => config.slsConfigs)
                 ],

@@ -2,6 +2,9 @@ import React, {ReactNode} from 'react';
 import Types from '../types';
 import {IComponent} from "../types/component";
 
+export const ROUTE_INSTANCE_TYPE = "RouteComponent";
+
+
 /**
  * Specifies all the properties that a Route-Component must have
  */
@@ -28,7 +31,7 @@ export default (props: IRoute | any) => {
 
     const routeProps: IComponent = {
         infrastructureType: Types.INFRASTRUCTURE_TYPE_COMPONENT,
-
+        instanceType: ROUTE_INSTANCE_TYPE
     };
 
     return Object.assign(routeProps, props);
@@ -38,8 +41,6 @@ export default (props: IRoute | any) => {
 
 export const isRoute = (component) => {
 
-    return component.props &&
-        component.props.path !== undefined &&
-        (component.props.render !== undefined || component.props.component !== undefined) &&
-        component.props.name !== undefined;
+    return component !== undefined &&
+        component.instanceType === ROUTE_INSTANCE_TYPE;
 };

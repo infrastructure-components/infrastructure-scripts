@@ -14,6 +14,17 @@ export interface IInfrastructure {
     infrastructureType: string,
 
     /**
+     * a unique identifier of the instance that allows finding it
+     * CAUTION: this id must be the same even though it may be processed at different times!!
+     */
+    instanceId: string,
+
+    /**
+     * a string that identifies the specific type of infrastructure, e.g. IsomorphicApp, SinglePageApp, etc.
+     */
+    instanceType: string,
+
+    /**
      * An Infrastructure may provide plugins, the Plugins may need some data that we provide here!
      */
     createPlugins: (configPath: string) => Array<IPlugin>

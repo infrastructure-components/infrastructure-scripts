@@ -3,6 +3,8 @@ import React, {ReactNode} from 'react';
 import Types from '../types';
 import { IClient } from "../types/client";
 
+export const WEBAPP_INSTANCE_TYPE = "WebAppComponent";
+
 
 /**
  * Specifies all the properties that a Client-Component must have
@@ -33,10 +35,8 @@ export interface IWebApp {
  * @param component to be tested
  */
 export function isWebApp(component) {
-    return component.props !== undefined &&
-        component.props.id !== undefined &&
-        component.props.path !== undefined &&
-        component.props.method !== undefined
+    return component !== undefined &&
+        component.instanceType === WEBAPP_INSTANCE_TYPE
 }
 
 /**
@@ -51,7 +51,7 @@ export default (props: IWebApp | any) => {
     // the WebAppComponent must have all the properties of IClient
     const clientProps: IClient = {
         infrastructureType: Types.INFRASTRUCTURE_TYPE_CLIENT,
-
+        instanceType: WEBAPP_INSTANCE_TYPE
     };
 
     return Object.assign(clientProps, props);

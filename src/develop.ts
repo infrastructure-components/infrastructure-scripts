@@ -1,6 +1,7 @@
 
 import { prepareConfiguration, loadStaticConfiguration } from './utils/configuration-lib';
-import {parseForPlugins, extractConfigs, INFRASTRUCTURE_MODES} from "./utils/parser";
+import {parseForPlugins, extractConfigs} from "./utils/parser";
+import {INFRASTRUCTURE_MODES, loadConfiguration} from "./utils/loader";
 import { IConfigParseResult } from './utils/config-parse-result';
 import {runWebpack} from "./utils/webpack-libs";
 
@@ -13,16 +14,20 @@ export async function develop (configFilePath: string) {
     // create a usable configuration
     const configPath = await prepareConfiguration(configFilePath);
 
+    // load the configuration
+    const config = loadConfiguration(configPath, INFRASTRUCTURE_MODES.COMPILATION);
+
     // parse the configuration for plugins
-    const plugins = parseForPlugins(configPath, configFilePath);
+    const plugins = parseForPlugins(config, configFilePath);
     console.log("plugins: ", plugins);
 
     // load the configuration statically (without objects)
-    const staticConfig = loadStaticConfiguration(configPath).default;
-    console.log("staticConfig: ", staticConfig);
+    //const staticConfig = loadStaticConfiguration(configPath).default;
+    //console.log("staticConfig: ", staticConfig);
+
 
     // parse the loaded configuration in compile mode (statically)
-    const parsedConfig: IConfigParseResult = await extractConfigs(staticConfig, plugins, INFRASTRUCTURE_MODES.COMPILATION);
+    const parsedConfig: IConfigParseResult = await extractConfigs(config, plugins, INFRASTRUCTURE_MODES.COMPILATION);
 
 
     console.log("\n--------------------------------------------------");

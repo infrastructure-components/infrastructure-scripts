@@ -1,6 +1,8 @@
 
 export interface RuntimeParseResult {
-    infrastructure: Array<any>,
+    infrastructures: Array<any>,
 
-    client
+    clients: Array<any>,
+
+    components: Array<any>
 }

@@ -47,11 +47,11 @@ export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
                     complementWebpackConfig(createClientWebpackConfig(
                         "./"+path.join("node_modules", "infrastructure-scripts", "assets", "client.tsx"), //entryPath: string,
                         path.join(currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
-                        component.props.id,
+                        component.id,
                         {
                             __CONFIG_FILE_PATH__: pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
                         }, {
-                            WEB_APP_ID: `"${component.props.id}"` // replace the webAppId-placeholder
+                            WEB_APP_ID: `"${component.id}"` // replace the webAppId-placeholder
                         }
                     ))
                 ],

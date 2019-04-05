@@ -15,6 +15,10 @@ export interface IClient {
      */
     infrastructureType: string,
 
+    /**
+     * a string that identifies the specific type of infrastructure, e.g. Middleware, Route, etc.
+     */
+    instanceType: string,
 }
 
 /**

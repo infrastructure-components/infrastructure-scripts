@@ -13,6 +13,9 @@ import { matchPath } from 'react-router';
 import helmet from 'react-helmet';
 import {createServerApp} from "./routed-app";
 
+import Types from '../src/types';
+import { extractObject, INFRASTRUCTURE_MODES, loadConfigurationFromModule } from '../src/utils/loader';
+
 //import { getClientFilename } from '../types/app-config';
 export const getClientFilename = (name: string): string => {
     return name+".bundle.js";
@@ -21,7 +24,7 @@ export const getClientFilename = (name: string): string => {
 //import {loadIsoConfigFromComponent, applyCustomComponents} from "../isolib";
 //import { applyAppClientModules } from '../types/client-app-config';
 
-const createServer = (assetsDir, resolvedAssetsPath) => {
+const createServer = (assetsDir, resolvedAssetsPath, isomorphicId) => {
 
     // express is the web-framework that lets us configure the endpoints
     const app = express();
@@ -31,26 +34,23 @@ const createServer = (assetsDir, resolvedAssetsPath) => {
     // serve static files - the async components of the server - only used of localhost
     app.use('/'+assetsDir, express.static(resolvedAssetsPath));
 
+    
+    // load the IsomorphicComponent
+    // we must load it directly from the module here, to enable the aliad of the config_file_path
+    const isoConfig = loadConfigurationFromModule(require('__CONFIG_FILE_PATH__'), INFRASTRUCTURE_MODES.RUNTIME);
 
-    app.get("*", (req, res, next) => {
-        console.log("it works");
-        res.status(200).send(
-            "hello"
-        ).end();
-    })
-    /*
+
+    // let's extract it from the root configuration
+    const isoApp = extractObject(
+        isoConfig,
+        Types.INFRASTRUCTURE_TYPE_INFRASTRUCTURE,
+        isomorphicId
+    )
     // connect the middlewares
-    var IsoConfig = require('__CONFIG_FILE_PATH__');
-    if (IsoConfig && IsoConfig.default && IsoConfig.default.props) {
-        console.log("found component!");
-        IsoConfig = loadIsoConfigFromComponent(IsoConfig.default, false);
-    }
+    isoApp.middlewares.map(mw => app.use(mw));
 
 
-    IsoConfig.isoConfig.middlewares.map(mw => app.use(mw));
-
-
-
+/*
     // split the clientApps here and define a function for each of the clientApps, with the right middleware
     IsoConfig.isoConfig.clientApps
         .filter(clientApp => clientApp.middlewareCallbacks !== undefined)
@@ -311,4 +311,4 @@ const server = lib.default('${ssrConfig.assetsPath}', '${resolveAssetsPath(ssrCo
 exports.default = server;*/
 
 // these variables are replaced during compilation
-export default serverless(createServer(__ASSETS_PATH__, __RESOLVED_ASSETS_PATH__));
+export default serverless(createServer(__ASSETS_PATH__, __RESOLVED_ASSETS_PATH__, __ISOMORPHIC_ID__));

@@ -3,16 +3,20 @@ import React, {ReactNode} from 'react';
 import Types from '../types';
 import { IInfrastructure } from "../types/infrastructure";
 
+import { isMiddleware } from '../middleware/middleware-component';
+import { getChildrenArray } from '../utils/libs';
 
 import { IsoPlugin } from './iso-plugin';
 import { WebAppPlugin } from '../webapp/webapp-plugin';
 
+import { loadInfrastructureComponent, INFRASTRUCTURE_MODES } from '../utils/loader';
+
+export const ISOMORPHIC_INSTANCE_TYPE = "IsomorphicComponent";
 
 /**
- * Specifies all the properties that an Isomorphic-Component must have
- * These are specified by the user
+ * Specifies all the properties that an Isomorphic-Component must get from the user, as args
  */
-export interface IIsomorphic {
+export interface IIsomorphicArgs {
 
     /**
      * name of the Cloudformation Stack
@@ -35,20 +39,34 @@ export interface IIsomorphic {
     region: string
 }
 
+/**
+ * specifies the properties that an Isomorphic-Component has during runtime
+ */
+export interface IIsomorphicProps {
+
+    /**
+     * An isomorphic component supports middlewares, defines as direct children
+     */
+    middlewares: Array<any>
+}
 
 /**
  * The IsomorphicApp is an infrastructure and must implement [[IInfrastructure]]
  *
  * @param props
  */
-export default (props: IIsomorphic | any) => {
+export default (props: IIsomorphicArgs | any) => {
 
     console.log ("isomorphic: ",props );
 
-    const appProps: IInfrastructure = {
+    const infProps: IInfrastructure = {
 
         // allows to identify this component as Infrastructure
         infrastructureType: Types.INFRASTRUCTURE_TYPE_INFRASTRUCTURE,
+
+        instanceId: props.stackName,
+        
+        instanceType: ISOMORPHIC_INSTANCE_TYPE,
 
         // only load plugins during compilation
         createPlugins: (configPath: string) => props.infrastructureMode === "COMPILATION" ? [
@@ -67,15 +85,19 @@ export default (props: IIsomorphic | any) => {
         ] : []
     };
 
-    return Object.assign(appProps, props);
+    const isoProps: IIsomorphicProps = {
+        middlewares: getChildrenArray(props.children)
+            .filter(child => isMiddleware(child))
+            .map(mw => mw.callback)
+    }
+    
+
+    return Object.assign(props, infProps, isoProps);
 
 
 };
 
 export function isIsomorphicApp(component) {
-    return component.props !== undefined &&
-        component.props.stackName !== undefined &&
-        component.props.buildPath !== undefined &&
-        component.props.assetsPath !== undefined &&
-        component.props.region !== undefined
+    return component !== undefined &&
+        component.instanceType === ISOMORPHIC_INSTANCE_TYPE
 }
