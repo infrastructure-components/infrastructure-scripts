@@ -1,9 +1,9 @@
-
-import { IPlugin } from '../utils/plugin';
-import { IConfigParseResult } from '../utils/config-parse-result';
-import { IWebApp, isWebApp } from './webapp-component';
-import { createClientWebpackConfig, complementWebpackConfig } from "../utils/webpack-libs";
-import {currentAbsolutePath, pathToConfigFile} from "../utils/system-libs";
+/**
+ * This module must not import anything globally not workin in web-mode! if needed, require it within the functions
+ */
+import { IPlugin } from '../infra-comp-utils/plugin';
+import { IConfigParseResult } from '../infra-comp-utils/config-parse-result';
+import { isWebApp } from './webapp-component';
 
 /**
  * Parameters that apply to the whole Plugin, passed by other plugins
@@ -44,14 +44,14 @@ export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
 
                 // a webapp has its own webpack configuration
                 webpackConfigs: [
-                    complementWebpackConfig(createClientWebpackConfig(
+                    require("../utils/webpack-libs").complementWebpackConfig(require("../utils/webpack-libs").createClientWebpackConfig(
                         "./"+path.join("node_modules", "infrastructure-scripts", "assets", "client.tsx"), //entryPath: string,
-                        path.join(currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
+                        path.join(require("../utils/system-libs").currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
                         component.id,
                         {
-                            __CONFIG_FILE_PATH__: pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
+                            __CONFIG_FILE_PATH__: require("../utils/system-libs").pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
                         }, {
-                            WEB_APP_ID: `"${component.id}"` // replace the webAppId-placeholder
+                            __ISOMORPHIC_ID__: `"${component.instanceId}"`,
                         }
                     ))
                 ],

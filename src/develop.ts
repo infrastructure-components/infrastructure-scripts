@@ -1,9 +1,9 @@
 
-import { prepareConfiguration, loadStaticConfiguration } from './utils/configuration-lib';
-import {parseForPlugins, extractConfigs} from "./utils/parser";
-import {INFRASTRUCTURE_MODES, loadConfiguration} from "./utils/loader";
-import { IConfigParseResult } from './utils/config-parse-result';
-import {runWebpack} from "./utils/webpack-libs";
+import { prepareConfiguration, loadStaticConfiguration } from './infra-comp-utils/configuration-lib';
+import {parseForPlugins, extractConfigs} from "./infra-comp-utils/parser";
+import {INFRASTRUCTURE_MODES, loadConfiguration} from "./infra-comp-utils/loader";
+import { IConfigParseResult } from './infra-comp-utils/config-parse-result';
+import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
 /**
  *
@@ -42,4 +42,6 @@ export async function develop (configFilePath: string) {
         await runWebpack(wpConfig)
     }));
 
+    // now run the post-build functions
+    await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
 };

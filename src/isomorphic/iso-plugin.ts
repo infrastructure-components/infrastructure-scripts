@@ -1,11 +1,10 @@
-
-import { IPlugin } from '../utils/plugin';
-import { IConfigParseResult } from '../utils/config-parse-result';
+/**
+ * This module must not import anything globally not workin in web-mode! if needed, require it within the functions
+ */
+import { IPlugin } from '../infra-comp-utils/plugin';
+import { IConfigParseResult } from '../infra-comp-utils/config-parse-result';
 import { isIsomorphicApp } from './iso-component';
-import { toSlsConfig } from "../utils/sls-libs";
-import { createServerWebpackConfig, complementWebpackConfig } from "../utils/webpack-libs";
-import { resolveAssetsPath } from '../utils/iso-libs';
-import {currentAbsolutePath, pathToConfigFile} from "../utils/system-libs";
+import { resolveAssetsPath } from '../infra-comp-utils/iso-libs';
 
 /**
  * Parameters that apply to the whole Plugin, passed by other plugins
@@ -44,14 +43,16 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
             // we use the hardcoded name `server` as name
             const serverName = "server";
 
+            const serverBuildPath = path.join(require("../utils/system-libs").currentAbsolutePath(), props.buildPath);
+
             // the isomorphic app has a server application
-            const serverWebPack = complementWebpackConfig(
-                createServerWebpackConfig(
+            const serverWebPack = require("../utils/webpack-libs").complementWebpackConfig(
+                require("../utils/webpack-libs").createServerWebpackConfig(
                     "./"+path.join("node_modules", "infrastructure-scripts", "assets", "server.tsx"), //entryPath: string,
-                    path.join(currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
+                    serverBuildPath, //use the buildpath from the parent plugin
                     serverName, // name of the server
                     {
-                        __CONFIG_FILE_PATH__: pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
+                        __CONFIG_FILE_PATH__: require("../utils/system-libs").pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
                     }, {
                         __ISOMORPHIC_ID__: `"${component.instanceId}"`,
                         __ASSETS_PATH__: `"${component.assetsPath}"`,
@@ -64,9 +65,18 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
                 )
             );
 
+            // provide all client configs in a flat list
+            const webpackConfigs: any = childConfigs.reduce((result, config) => result.concat(config.webpackConfigs), []);
+
+            const copyAssetsPostBuild = () => {
+                console.log("now copy the assets!");
+
+                webpackConfigs.map(config => require("../utils/system-libs").copyAssets( config.output.path, path.join(serverBuildPath, serverName, component.assetsPath)));
+            };
+
             return {
                 slsConfigs: [
-                    toSlsConfig(
+                    require("../utils/sls-libs").toSlsConfig(
                         component.stackName,
                         serverName,
                         component.buildPath,
@@ -75,10 +85,11 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
 
                     ...childConfigs.map(config => config.slsConfigs)
                 ],
+                
+                // add the server config 
+                webpackConfigs: webpackConfigs.concat([serverWebPack]),
 
-                // provide all client configs and the server config in a flat list
-                webpackConfigs: childConfigs.reduce((result, config) => result.concat(config.webpackConfigs), [serverWebPack]),
-                postBuilds: childConfigs.reduce((result, config) => result.concat(config.postBuilds), []),
+                postBuilds: childConfigs.reduce((result, config) => result.concat(config.postBuilds), [copyAssetsPostBuild]),
             }
         }
     }

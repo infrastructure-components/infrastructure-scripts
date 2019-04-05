@@ -107,12 +107,17 @@ export const createWebpackConfig = (
             alias: aliasDict,
         },
         plugins: [
-            new webpack.DefinePlugin(replaceDict),
+            new webpack.DefinePlugin(Object.assign({
+
+            }, replaceDict)),
 
             // TODO see: https://remarkablemark.org/blog/2017/02/25/webpack-ignore-module/
             // TODO get the list of plugins programmatically, not hard-coded like now!
-            new webpack.IgnorePlugin(/iso-plugin/),
-            new webpack.IgnorePlugin(/webapp-plugin/),
+            new webpack.IgnorePlugin(/infra-comp-utils\/sls-libs/),
+            new webpack.IgnorePlugin(/infra-comp-utils\/system-libs/),
+            new webpack.IgnorePlugin(/infra-comp-utils\/webpack-libs/),
+            new webpack.IgnorePlugin(/infra-comp-utils\/configuration-lib/),
+            new webpack.IgnorePlugin(/infra-comp-utils\/parser/),
         ]
     };
 

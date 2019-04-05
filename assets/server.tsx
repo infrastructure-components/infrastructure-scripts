@@ -14,7 +14,7 @@ import helmet from 'react-helmet';
 import {createServerApp} from "./routed-app";
 
 import Types from '../src/types';
-import { extractObject, INFRASTRUCTURE_MODES, loadConfigurationFromModule } from '../src/utils/loader';
+import { extractObject, INFRASTRUCTURE_MODES, loadConfigurationFromModule } from '../src/infra-comp-utils/loader';
 
 //import { getClientFilename } from '../types/app-config';
 export const getClientFilename = (name: string): string => {
@@ -43,73 +43,54 @@ const createServer = (assetsDir, resolvedAssetsPath, isomorphicId) => {
     // let's extract it from the root configuration
     const isoApp = extractObject(
         isoConfig,
-        Types.INFRASTRUCTURE_TYPE_INFRASTRUCTURE,
+        Types.INFRASTRUCTURE_TYPE_CONFIGURATION,
         isomorphicId
     )
     // connect the middlewares
-    isoApp.middlewares.map(mw => app.use(mw));
+    isoApp.middlewares.map(mw => app.use(mw.callback));
 
 
-/*
     // split the clientApps here and define a function for each of the clientApps, with the right middleware
-    IsoConfig.isoConfig.clientApps
-        .filter(clientApp => clientApp.middlewareCallbacks !== undefined)
+    isoApp.webApps
+        //.filter(clientApp => clientApp.middlewares !== undefined)
         .map(clientApp => {
 
-
             const serveMiddleware = (req, res, next) => serve(req, res, next, clientApp, assetsDir);
+            const routes = clientApp.routes.filter(route => route.middlewares !== undefined && route.middlewares.length > 0);
 
             if (clientApp.method.toUpperCase() == "GET") {
 
-                app.get(clientApp.path, ...clientApp.middlewareCallbacks)
-                applyRouteMw(clientApp, app);
+                app.get(clientApp.path, ...clientApp.middlewares.map(mw => mw.callback));
+                routes.forEach(route => app.get(route.path, ...route.middlewares.map(mw => mw.callback)));
                 app.get(clientApp.path, serveMiddleware);
 
             } else if (clientApp.method.toUpperCase() == "POST") {
 
-                app.post(clientApp.path, ...clientApp.middlewareCallbacks)
-                applyRouteMw(clientApp, app);
+                app.post(clientApp.path, ...clientApp.middlewares.map(mw => mw.callback));
+                routes.forEach(route => app.post(route.path, ...route.middlewares.map(mw => mw.callback)));
                 app.post(clientApp.path, serveMiddleware);
 
             } else if (clientApp.method.toUpperCase() == "PUT") {
 
-                app.put(clientApp.path, ...clientApp.middlewareCallbacks)
-                applyRouteMw(clientApp, app);
+                app.put(clientApp.path, ...clientApp.middlewares.map(mw => mw.callback));
+                routes.forEach(route => app.put(route.path, ...route.middlewares.map(mw => mw.callback)));
                 app.put(clientApp.path, serveMiddleware);
 
             } else if (clientApp.method.toUpperCase() == "DELETE") {
 
-                app.delete(clientApp.path, ...clientApp.middlewareCallbacks)
-                applyRouteMw(clientApp, app);
+                app.delete(clientApp.path, ...clientApp.middlewares.map(mw => mw.callback));
+                routes.forEach(route => app.delete(route.path, ...route.middlewares.map(mw => mw.callback)));
                 app.delete(clientApp.path, serveMiddleware);
 
             }
 
             return clientApp;
         });
-*/
+
 
     return app;
 };
 
-const applyRouteMw = (clientApp, app) => {
-    clientApp.routes
-        .filter(route => route.middlewareCallbacks !== undefined && route.middlewareCallbacks.length > 0)
-        .map(route => {
-            if (route.method.toUpperCase() == "GET") {
-                app.get(route.path, ...route.middlewareCallbacks)
-            } else if (route.method.toUpperCase() == "POST") {
-                app.post(route.path, ...route.middlewareCallbacks)
-            } else if (route.method.toUpperCase() == "PUT") {
-                app.put(route.path, ...route.middlewareCallbacks)
-            } else if (route.method.toUpperCase() == "DELETE") {
-                app.delete(route.path, ...route.middlewareCallbacks)
-            }
-
-            return route;
-        });
-
-}
 
 async function serve (req, res, next, clientApp, assetsDir) {
 

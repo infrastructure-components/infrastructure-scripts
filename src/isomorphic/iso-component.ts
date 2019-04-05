@@ -1,15 +1,17 @@
 import React, {ReactNode} from 'react';
 
 import Types from '../types';
-import { IInfrastructure } from "../types/infrastructure";
+import { IConfiguration } from "../types/configuration";
+import { IInfrastructure } from "../types";
 
 import { isMiddleware } from '../middleware/middleware-component';
-import { getChildrenArray } from '../utils/libs';
+import { isWebApp } from '../webapp/webapp-component';
+import { getChildrenArray } from '../infra-comp-utils/libs';
 
 import { IsoPlugin } from './iso-plugin';
 import { WebAppPlugin } from '../webapp/webapp-plugin';
 
-import { loadInfrastructureComponent, INFRASTRUCTURE_MODES } from '../utils/loader';
+import { loadInfrastructureComponent, INFRASTRUCTURE_MODES } from '../infra-comp-utils/loader';
 
 export const ISOMORPHIC_INSTANCE_TYPE = "IsomorphicComponent";
 
@@ -47,7 +49,12 @@ export interface IIsomorphicProps {
     /**
      * An isomorphic component supports middlewares, defines as direct children
      */
-    middlewares: Array<any>
+    middlewares: Array<any>,
+
+    /**
+     * WebApps reply to the request
+     */
+    webApps: Array<any>
 }
 
 /**
@@ -59,10 +66,10 @@ export default (props: IIsomorphicArgs | any) => {
 
     console.log ("isomorphic: ",props );
 
-    const infProps: IInfrastructure = {
+    const infProps: IInfrastructure & IConfiguration = {
 
         // allows to identify this component as Infrastructure
-        infrastructureType: Types.INFRASTRUCTURE_TYPE_INFRASTRUCTURE,
+        infrastructureType: Types.INFRASTRUCTURE_TYPE_CONFIGURATION,
 
         instanceId: props.stackName,
         
@@ -87,8 +94,10 @@ export default (props: IIsomorphicArgs | any) => {
 
     const isoProps: IIsomorphicProps = {
         middlewares: getChildrenArray(props.children)
-            .filter(child => isMiddleware(child))
-            .map(mw => mw.callback)
+            .filter(child => isMiddleware(child)),
+
+        webApps: getChildrenArray(props.children)
+            .filter(child => isWebApp(child))
     }
     
 

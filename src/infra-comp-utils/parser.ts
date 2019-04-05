@@ -3,7 +3,7 @@ import * as deepmerge from 'deepmerge';
 
 import { IPlugin } from './plugin';
 import { IConfigParseResult, mergeParseResults } from './config-parse-result'
-import { extractPlugins, isInfrastructure } from "../types/infrastructure";
+import { extractPlugins, isConfiguration } from "../types/configuration";
 import { getChildrenArray } from './libs';
 import { INFRASTRUCTURE_MODES, loadInfrastructureComponent } from './loader';
 
@@ -17,7 +17,7 @@ export function parseForPlugins (parsedComponent: any, origConfigPath: string): 
 
     //console.log("configPath: ", configPath);
 
-    if (isInfrastructure(parsedComponent)) {
+    if (isConfiguration(parsedComponent)) {
         return extractPlugins(parsedComponent, origConfigPath);
 
     } else {

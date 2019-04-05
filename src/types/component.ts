@@ -2,21 +2,10 @@
 import Types from './index'
 
 /**
- * A Component has no special function
+ * A Component has no special function beyond the ones defined in IInfrastructure
  *
  */
 export interface IComponent {
-
-    /**
-     * like every infrastructure-component, a component must have a type
-     * to be set to `Types.INFRASTRUCTURE_TYPE_COMPONENT`
-     */
-    infrastructureType: string,
-
-    /**
-     * a string that identifies the specific type of infrastructure, e.g. Middleware, Route, etc.
-     */
-    instanceType: string,
 
 }
 

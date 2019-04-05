@@ -1,6 +1,11 @@
 import React, {ReactNode} from 'react';
-import Types from '../types';
+
 import {IComponent} from "../types/component";
+import Types, { IInfrastructure } from "../types";
+
+import { isMiddleware } from '../middleware/middleware-component';
+import { getChildrenArray } from '../infra-comp-utils/libs';
+
 
 export const ROUTE_INSTANCE_TYPE = "RouteComponent";
 
@@ -8,7 +13,7 @@ export const ROUTE_INSTANCE_TYPE = "RouteComponent";
 /**
  * Specifies all the properties that a Route-Component must have
  */
-export interface IRoute {
+export interface IRouteArgs {
 
     path: string,
 
@@ -21,20 +26,38 @@ export interface IRoute {
 
 
 /**
+ * specifies the properties that an Route-Component has during runtime
+ */
+export interface IRouteProps {
+
+    /**
+     * A route component supports middlewares, defines as direct children
+     */
+    middlewares: Array<any>,
+}
+
+
+/**
  * The WebApp is a client that runs in the browser, SPA or SSR
  *
  * @param props
  */
-export default (props: IRoute | any) => {
+export default (props: IRouteArgs | any) => {
 
     console.log ("route: ",props );
 
-    const routeProps: IComponent = {
+    const componentProps: IInfrastructure & IComponent = {
         infrastructureType: Types.INFRASTRUCTURE_TYPE_COMPONENT,
-        instanceType: ROUTE_INSTANCE_TYPE
+        instanceType: ROUTE_INSTANCE_TYPE,
+        instanceId: undefined, // middlewares cannot be found programmatically!
     };
 
-    return Object.assign(routeProps, props);
+    const routeProps: IRouteProps = {
+        middlewares: getChildrenArray(props.children)
+            .filter(child => isMiddleware(child)),
+    }
+
+    return Object.assign(props, componentProps, routeProps);
 
 
 };
