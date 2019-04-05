@@ -27,7 +27,7 @@ export interface IMiddleware {
  */
 export default (props: IMiddleware | any) => {
 
-    console.log ("middleware: ",props );
+    //console.log ("middleware: ",props );
 
     // the component must have the properties of IComponent
     const componentProps: IInfrastructure & IComponent = {

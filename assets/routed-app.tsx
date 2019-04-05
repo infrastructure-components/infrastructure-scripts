@@ -4,7 +4,7 @@ import { StaticRouter, matchPath } from 'react-router';
 import { Switch, Route, BrowserRouter, Link } from 'react-router-dom';
 
 import RedirectWithStatus from './redirect-w-status';
-import AttachRequest from './attach-request';
+import AttachRequest from '../src/components/attach-request';
 
 /**
  * Implementation of the RoutingAbstractionLayer
@@ -26,7 +26,7 @@ export interface IRoute {
     /**
      * array of callbacks to be used of a route before handing over to the "*"-callback
      */
-    middlewareCallbacks: Array<any>,
+    middlewares: Array<any>,
 
 
     /**
@@ -94,7 +94,7 @@ const RoutedApp: React.SFC<RoutedAppProps> = (props) => {
 
 
     return <Switch>
-        <Route exact={true} path="/test" render={ (props) =><Link to="/">Test</Link>} />
+        <Route exact={true} path="/test" render={(props) => <Link to="/">TestComponent</Link>} />
         {routes}
         {redirects}
     </Switch>;

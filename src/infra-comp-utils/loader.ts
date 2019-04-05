@@ -65,12 +65,12 @@ export const loadInfrastructureComponent = (component, infrastructureMode: strin
         }
 
         //console.log("parsed: ", parsed);
-        console.log("parsed InfrastructureComponent: ", result);
+        //console.log("parsed InfrastructureComponent: ", result);
 
         return result;
 
     } catch (error) {
-        console.error("NOT an infrastructure component --> ", error);
+        //console.error("NOT an infrastructure component --> ", error);
         return undefined;
     };
 }

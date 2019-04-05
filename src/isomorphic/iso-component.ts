@@ -64,7 +64,7 @@ export interface IIsomorphicProps {
  */
 export default (props: IIsomorphicArgs | any) => {
 
-    console.log ("isomorphic: ",props );
+    //console.log ("isomorphic: ",props );
 
     const infProps: IInfrastructure & IConfiguration = {
 

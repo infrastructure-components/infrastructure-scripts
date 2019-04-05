@@ -73,7 +73,7 @@ export function isWebApp(component) {
  */
 export default (props: IWebAppArgs | any) => {
 
-    console.log ("webapp: ", props);
+    //console.log ("webapp: ", props);
 
     // the WebAppComponent must have all the properties of IClient
     const clientProps: IInfrastructure & IClient = {

@@ -34,6 +34,8 @@ export interface IRouteProps {
      * A route component supports middlewares, defines as direct children
      */
     middlewares: Array<any>,
+
+    exact: boolean
 }
 
 
@@ -44,7 +46,7 @@ export interface IRouteProps {
  */
 export default (props: IRouteArgs | any) => {
 
-    console.log ("route: ",props );
+    //console.log ("route: ",props );
 
     const componentProps: IInfrastructure & IComponent = {
         infrastructureType: Types.INFRASTRUCTURE_TYPE_COMPONENT,
@@ -55,6 +57,7 @@ export default (props: IRouteArgs | any) => {
     const routeProps: IRouteProps = {
         middlewares: getChildrenArray(props.children)
             .filter(child => isMiddleware(child)),
+        exact: true
     }
 
     return Object.assign(props, componentProps, routeProps);
