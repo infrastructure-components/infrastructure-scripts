@@ -17,6 +17,7 @@ interface AttachRequestProps {
  */
 const AttachRequest: React.SFC<AttachRequestProps> = (props) => {
 
+    console.log("attached request: " , props.request);
     return <RequestContext.Provider value={props.request}>{props.children}</RequestContext.Provider>
 
 

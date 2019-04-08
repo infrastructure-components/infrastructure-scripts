@@ -62,7 +62,7 @@ export interface IWebAppProps {
  * @param component to be tested
  */
 export function isWebApp(component) {
-    return component !== undefined &&
+    return component !== undefined && 
         component.instanceType === WEBAPP_INSTANCE_TYPE
 }
 

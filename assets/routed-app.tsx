@@ -3,8 +3,11 @@ import React, { ReactNode } from 'react';
 import { StaticRouter, matchPath } from 'react-router';
 import { Switch, Route, BrowserRouter, Link } from 'react-router-dom';
 
+//import {useContext} from "react"
+//import {__RouterContext} from "react-router"
+
 import RedirectWithStatus from './redirect-w-status';
-import AttachRequest from '../src/components/attach-request';
+import AttachRequest from '../dist/components/attach-request';
 
 /**
  * Implementation of the RoutingAbstractionLayer
@@ -80,11 +83,13 @@ interface RoutedAppProps {
 
 const RoutedApp: React.SFC<RoutedAppProps> = (props) => {
     //.filter(({ customType }) => customType !== Types.IFRAME)
+    // (p) => render(Object.assign({},p, props))
+    //console.log("RoutedApp: " , useContext(__RouterContext))
 
     const routes = props.routes.map(({ path, exact, component, render }, i) => {
         console.log("routepath: ", path)
         // NOT using routeConfig.pathToRoute(path) for the Router includes a basename already!
-        return render !== undefined ? <Route key={'ROUTE_'+i} exact={exact} path={path} render={render} /> :
+        return render !== undefined ? <Route key={'ROUTE_'+i} exact={exact} path={path} render={render} />:
             <Route key={'ROUTE_'+i} exact={exact} path={path} component={component} />
     });
 
@@ -94,7 +99,6 @@ const RoutedApp: React.SFC<RoutedAppProps> = (props) => {
 
 
     return <Switch>
-        <Route exact={true} path="/test" render={(props) => <Link to="/">TestComponent</Link>} />
         {routes}
         {redirects}
     </Switch>;

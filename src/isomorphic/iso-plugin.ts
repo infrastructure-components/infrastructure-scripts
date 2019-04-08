@@ -28,6 +28,8 @@ export interface IIsoPlugin {
  */
 export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
 
+    //console.log("configFilePath: " , props.configFilePath);
+
     const result: IPlugin = {
         // identify Isomorphic-App-Components
         applies: (component): boolean => {
@@ -52,7 +54,9 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
                     serverBuildPath, //use the buildpath from the parent plugin
                     serverName, // name of the server
                     {
-                        __CONFIG_FILE_PATH__: require("../utils/system-libs").pathToConfigFile(props.configFilePath) // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
+                        __CONFIG_FILE_PATH__: require("../utils/system-libs").pathToConfigFile(props.configFilePath), // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
+                        //"react-router-dom$" : "../../node_modules/infrastructure-scripts/node_modules/react-router-dom" ,
+                        //"react-router-domX" : "../node_modules/react-router-dom"
                     }, {
                         __ISOMORPHIC_ID__: `"${component.instanceId}"`,
                         __ASSETS_PATH__: `"${component.assetsPath}"`,
