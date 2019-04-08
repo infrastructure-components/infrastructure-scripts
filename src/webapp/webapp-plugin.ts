@@ -48,8 +48,6 @@ export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
                         component.id,
                         {
                             __CONFIG_FILE_PATH__: require("../infra-comp-utils/system-libs").pathToConfigFile(props.configFilePath), // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
-                            //"react-router-dom$" : "../node_modules/infrastructure-scripts/node_modules/react-router-dom",
-                            //"react-router-domX" : "../node_modules/react-router-dom"
                         }, {
                             __ISOMORPHIC_ID__: `"${component.instanceId}"`,
                         }

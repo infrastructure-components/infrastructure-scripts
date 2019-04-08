@@ -2,6 +2,8 @@
 import { prepareConfiguration, loadStaticConfiguration } from './infra-comp-utils/configuration-lib';
 import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
+import { createSlsYaml, toSlsConfig } from './infra-comp-utils/sls-libs';
+
 import {
     INFRASTRUCTURE_MODES,
     loadConfiguration,
@@ -39,6 +41,9 @@ export async function build (configFilePath: string) {
     console.log("parsed config: ", parsedConfig);
     console.log("--------------------------------------------------\n");
 
+    createSlsYaml(parsedConfig.slsConfigs, true);
+
+    writeScriptsToPackageJson(configFilePath);
 
     // now run the webpacks
     await Promise.all(parsedConfig.webpackConfigs.map(async wpConfig => {
@@ -49,4 +54,28 @@ export async function build (configFilePath: string) {
 
     // now run the post-build functions
     await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
+
 };
+
+export const writeScriptsToPackageJson = (configFilePath: string) => {
+    const fs = require('fs');
+
+    try {
+        fs.copyFileSync( 'package.json', 'package_last.json' );
+        let rawdata = fs.readFileSync('package.json');
+
+        let packageJson = JSON.parse(rawdata);
+
+        
+        packageJson["scripts"] = Object.assign({}, packageJson.scripts, {
+            start: `scripts start ${configFilePath}`
+        })
+
+        fs.writeFileSync('package.json', JSON.stringify(packageJson, null , 2));
+        
+    } catch (error) {
+        console.error("Could not write scripts to package.json\n", error);
+        return undefined;
+    };
+
+}

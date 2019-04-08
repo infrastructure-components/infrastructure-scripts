@@ -30,8 +30,12 @@ resources:
 `;
 
 
+
+
 export async function createSlsYaml (slsConfig: any, keepSlsYaml: boolean) {
     // create a serverless.yml in the root directory
+
+    console.log("slsConfig: " , slsConfig)
 
     const fs = require("fs");
     const ymlExists = await existsSlsYml();
@@ -120,11 +124,16 @@ export async function deploySls(slsConfig: any, keepSlsYaml: boolean) {
  *
  * @param ssrConfigPath path to a module that exports [[ServerSideRenderingConfig]]
  */
-export async function startSlsOffline (slsConfig: any, keepSlsYaml: boolean) {
+export async function startSlsOffline (keepSlsYaml: boolean) {
 
     const fs = require("fs");
 
-    createSlsYaml(slsConfig, keepSlsYaml);
+    if (!existsSlsYml()) {
+        console.log("serverless.yml not found, please use 'npm run build'")
+        return;
+    }
+
+    //createSlsYaml(slsConfig, keepSlsYaml);
 
     await runSlsCmd(`sls offline start`, async (data) => {
         if (!keepSlsYaml && data.indexOf("Serverless: Offline listening") >= 0 && await existsSlsYml()) {
@@ -201,7 +210,7 @@ export const toSlsConfig = (
                 // index.default refers to the default export of the file
                 // this requires the server entry point to export as default:
                 // `export default serverless(createServer());`
-                handler: path.join(serverName, serverName+".default"),
+                handler: path.join(buildPath, serverName, serverName+".default"),
                 events: [
                     // this should match the public path in the app-config  
                     {http: "ANY /"},

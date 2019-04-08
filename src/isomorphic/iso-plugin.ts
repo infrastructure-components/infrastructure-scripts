@@ -4,6 +4,7 @@
 import { isIsomorphicApp } from './iso-component';
 import { resolveAssetsPath } from '../infra-comp-utils/iso-libs';
 import { IConfigParseResult, IPlugin, isWebApp } from 'infrastructure-components';
+import * as deepmerge from 'deepmerge';
 
 
 /**
@@ -55,8 +56,7 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
                     serverName, // name of the server
                     {
                         __CONFIG_FILE_PATH__: require("../infra-comp-utils/system-libs").pathToConfigFile(props.configFilePath), // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
-                        //"react-router-dom$" : "../../node_modules/infrastructure-scripts/node_modules/react-router-dom" ,
-                        //"react-router-domX" : "../node_modules/react-router-dom"
+
                     }, {
                         __ISOMORPHIC_ID__: `"${component.instanceId}"`,
                         __ASSETS_PATH__: `"${component.assetsPath}"`,
@@ -79,7 +79,7 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
             };
 
             return {
-                slsConfigs: [
+                slsConfigs: deepmerge.all([
                     require("../infra-comp-utils/sls-libs").toSlsConfig(
                         component.stackName,
                         serverName,
@@ -87,8 +87,9 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
                         component.assetsPath,
                         component.region),
 
+                    ],
                     ...childConfigs.map(config => config.slsConfigs)
-                ],
+                ),
                 
                 // add the server config 
                 webpackConfigs: webpackConfigs.concat([serverWebPack]),
