@@ -117,7 +117,7 @@ export const createWebpackConfig = (
             new webpack.IgnorePlugin(/infra-comp-utils\/system-libs/),
             new webpack.IgnorePlugin(/infra-comp-utils\/webpack-libs/),
             new webpack.IgnorePlugin(/infra-comp-utils\/configuration-lib/),
-            new webpack.IgnorePlugin(/infra-comp-utils\/parser/),
+            //new webpack.IgnorePlugin(/infra-comp-utils\/parser/),
         ]
     };
 

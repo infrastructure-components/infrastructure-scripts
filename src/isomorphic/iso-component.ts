@@ -1,17 +1,19 @@
 import React, {ReactNode} from 'react';
 
-import Types from '../types';
-import { IConfiguration } from "../types/configuration";
-import { IInfrastructure } from "../types";
-
-import { isMiddleware } from '../middleware/middleware-component';
-import { isWebApp } from '../webapp/webapp-component';
-import { getChildrenArray } from '../infra-comp-utils/libs';
+import {
+    getChildrenArray,
+    IConfiguration,
+    IInfrastructure,
+    INFRASTRUCTURE_MODES,
+    isMiddleware,
+    isWebApp,
+    loadInfrastructureComponent,
+    Types
+} from 'infrastructure-components';
 
 import { IsoPlugin } from './iso-plugin';
 import { WebAppPlugin } from '../webapp/webapp-plugin';
 
-import { loadInfrastructureComponent, INFRASTRUCTURE_MODES } from '../infra-comp-utils/loader';
 
 export const ISOMORPHIC_INSTANCE_TYPE = "IsomorphicComponent";
 

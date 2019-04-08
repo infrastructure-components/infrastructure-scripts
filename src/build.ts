@@ -1,15 +1,20 @@
 
 import { prepareConfiguration, loadStaticConfiguration } from './infra-comp-utils/configuration-lib';
-import {parseForPlugins, extractConfigs} from "./infra-comp-utils/parser";
-import {INFRASTRUCTURE_MODES, loadConfiguration} from "./infra-comp-utils/loader";
-import { IConfigParseResult } from './infra-comp-utils/config-parse-result';
 import {runWebpack} from "./infra-comp-utils/webpack-libs";
+
+import {
+    INFRASTRUCTURE_MODES,
+    loadConfiguration,
+    IConfigParseResult,
+    parseForPlugins,
+    extractConfigs
+} from 'infrastructure-components';
 
 /**
  *
  * @param configFilePath
  */
-export async function develop (configFilePath: string) {
+export async function build (configFilePath: string) {
 
     // create a usable configuration
     const configPath = await prepareConfiguration(configFilePath);

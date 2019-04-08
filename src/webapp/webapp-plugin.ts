@@ -1,9 +1,7 @@
 /**
  * This module must not import anything globally not workin in web-mode! if needed, require it within the functions
  */
-import { IPlugin } from '../infra-comp-utils/plugin';
-import { IConfigParseResult } from '../infra-comp-utils/config-parse-result';
-import { isWebApp } from './webapp-component';
+import { IConfigParseResult, IPlugin, isWebApp } from 'infrastructure-components';
 
 /**
  * Parameters that apply to the whole Plugin, passed by other plugins
@@ -44,12 +42,12 @@ export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
 
                 // a webapp has its own webpack configuration
                 webpackConfigs: [
-                    require("../utils/webpack-libs").complementWebpackConfig(require("../utils/webpack-libs").createClientWebpackConfig(
-                        "./"+path.join("node_modules", "infrastructure-scripts", "assets", "client.tsx"), //entryPath: string,
-                        path.join(require("../utils/system-libs").currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
+                    require("../infra-comp-utils/webpack-libs").complementWebpackConfig(require("../infra-comp-utils/webpack-libs").createClientWebpackConfig(
+                        "./"+path.join("node_modules", "infrastructure-components", "assets", "client.tsx"), //entryPath: string,
+                        path.join(require("../infra-comp-utils/system-libs").currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
                         component.id,
                         {
-                            __CONFIG_FILE_PATH__: require("../utils/system-libs").pathToConfigFile(props.configFilePath), // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
+                            __CONFIG_FILE_PATH__: require("../infra-comp-utils/system-libs").pathToConfigFile(props.configFilePath), // replace the IsoConfig-Placeholder with the real path to the main-config-bundle
                             //"react-router-dom$" : "../node_modules/infrastructure-scripts/node_modules/react-router-dom",
                             //"react-router-domX" : "../node_modules/react-router-dom"
                         }, {

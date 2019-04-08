@@ -1,5 +1,5 @@
 import { YamlEditor } from '../yaml-edit';
-import {AppConfig } from "infrastructure-components";
+
 /**
  * Basic serveless.yml frame
  */
