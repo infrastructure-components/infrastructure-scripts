@@ -106,10 +106,10 @@ async function runSlsCmd(slsCmd: string, onStdOut?: (data) => void) {
     });
 }
 
-export async function deploySls(slsConfig: any, keepSlsYaml: boolean) {
+export async function deploySls() {
     const fs = require("fs");
 
-    createSlsYaml(slsConfig, keepSlsYaml);
+    //createSlsYaml(slsConfig, keepSlsYaml);
 
     // login in to Serverless/Aws
     await slsLogin();

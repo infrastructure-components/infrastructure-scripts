@@ -1,6 +1,6 @@
 {
   "name": "infrastructure-scripts",
-  "version": "0.0.1",
+  "version": "0.0.12",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -73,5 +73,7 @@
   },
   "devDependencies": {
     "serverless-offline": "^3.33.0"
-  }
+  },
+  "bundledDependencies": [
+  ]
 }

@@ -62,7 +62,8 @@ export const createClientWebpackConfig = (
                 path: clientPath,
                 filename: appName+".bundle.js"
             },
-            target: "web"
+            target: "web",
+            name: appName
         }
     );
 
@@ -126,6 +127,8 @@ export const createWebpackConfig = (
 
 
 export function complementWebpackConfig(webpackConfig: any) {
+    const path = require('path');
+
     if (webpackConfig !== undefined) {
 
         /**
@@ -136,6 +139,8 @@ export function complementWebpackConfig(webpackConfig: any) {
          */
         const target = webpackConfig.target !== undefined ? webpackConfig.target : "web";
         console.log("loading configuration for environment: ", target);
+
+        //webpackConfig.context = path.join(require("./system-libs").currentAbsolutePath());
 
         webpackConfig.mode = "development";
 
@@ -175,6 +180,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                 },
                 {
                     test: /\.(ts|tsx)$/,
+                    //include: __dirname,
                     exclude: [/node_modules/],
                     use: [{
                         /**

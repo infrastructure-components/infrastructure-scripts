@@ -4,12 +4,11 @@ import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
 import { createSlsYaml, toSlsConfig } from './infra-comp-utils/sls-libs';
 
+import { parseConfiguration } from './infra-comp-utils/configuration-lib';
+
+
 import {
-    INFRASTRUCTURE_MODES,
-    loadConfiguration,
     IConfigParseResult,
-    parseForPlugins,
-    extractConfigs
 } from 'infrastructure-components';
 
 /**
@@ -18,38 +17,23 @@ import {
  */
 export async function build (configFilePath: string) {
 
-    // create a usable configuration
-    const configPath = await prepareConfiguration(configFilePath);
-
-    // load the configuration
-    const config = loadConfiguration(configPath, INFRASTRUCTURE_MODES.COMPILATION);
-
-    // parse the configuration for plugins
-    const plugins = parseForPlugins(config, configFilePath);
-    console.log("plugins: ", plugins);
-
-    // load the configuration statically (without objects)
-    //const staticConfig = loadStaticConfiguration(configPath).default;
-    //console.log("staticConfig: ", staticConfig);
-
-
-    // parse the loaded configuration in compile mode (statically)
-    const parsedConfig: IConfigParseResult = await extractConfigs(config, plugins, INFRASTRUCTURE_MODES.COMPILATION);
-
-
-    console.log("\n--------------------------------------------------");
-    console.log("parsed config: ", parsedConfig);
-    console.log("--------------------------------------------------\n");
+    // load and parse the configuration from the temporary folder
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath);
 
     createSlsYaml(parsedConfig.slsConfigs, true);
 
-    writeScriptsToPackageJson(configFilePath);
+    writeScriptsToPackageJson(
+        configFilePath,
+        parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.name !== undefined).map(wpConfig => wpConfig.name)
+    );
 
     // now run the webpacks
     await Promise.all(parsedConfig.webpackConfigs.map(async wpConfig => {
-        //console.log("wpConfig: ", wpConfig);
+        console.log("wpConfig: ", wpConfig);
         
         await runWebpack(wpConfig)
+
+        console.log ("--- done ---")
     }));
 
     // now run the post-build functions
@@ -57,7 +41,7 @@ export async function build (configFilePath: string) {
 
 };
 
-export const writeScriptsToPackageJson = (configFilePath: string) => {
+export const writeScriptsToPackageJson = (configFilePath: string, webapps: Array<string>) => {
     const fs = require('fs');
 
     try {
@@ -66,10 +50,16 @@ export const writeScriptsToPackageJson = (configFilePath: string) => {
 
         let packageJson = JSON.parse(rawdata);
 
+        // TODO currently dev-environment hardcoded!
         
         packageJson["scripts"] = Object.assign({}, packageJson.scripts, {
-            start: `scripts start ${configFilePath}`
-        })
+            start: `scripts start ${configFilePath}`,
+            deploy: `scripts .env deploy ${configFilePath} dev`,
+        }, ...webapps.map(app => {
+            var obj = {};
+            obj[app] = `scripts app ${configFilePath} ${app}`;
+            return obj;
+        }));
 
         fs.writeFileSync('package.json', JSON.stringify(packageJson, null , 2));
         

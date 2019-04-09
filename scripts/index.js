@@ -34,13 +34,13 @@ const { loadEnv } = require('../dist/infra-comp-utils/system-libs');
 
 // these are the commands that can be executed
 /*
- const { deploy } = require('../dist/deploy');
+
 const { init } = require('../dist/init');
 */
 const { build } = require('../dist/build');
 const { start } = require('../dist/start');
 const { app } = require('../dist/app');
-
+const { deploy } = require('../dist/deploy');
 
 if (args.length > 0) {
 

@@ -95,6 +95,14 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
                 webpackConfigs: webpackConfigs.concat([serverWebPack]),
 
                 postBuilds: childConfigs.reduce((result, config) => result.concat(config.postBuilds), [copyAssetsPostBuild]),
+
+                stackName: component.stackName,
+
+                assetsPath: component.assetsPath,
+
+                buildPath: component.buildPath,
+
+                region: component.region
             }
         }
     }
