@@ -4,7 +4,7 @@
  */
 
 import { parseConfiguration } from './infra-comp-utils/configuration-lib';
-import { getStaticBucketName } from './infra-comp-utils/iso-libs';
+import { getStaticBucketName } from 'infrastructure-components';
 import { deploySls, s3sync, createSlsYaml } from './infra-comp-utils/sls-libs';
 import * as deepmerge from 'deepmerge';
 
