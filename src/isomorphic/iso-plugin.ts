@@ -51,7 +51,7 @@ export const IsoPlugin = (props: IIsoPlugin): IPlugin => {
             // the isomorphic app has a server application
             const serverWebPack = require("../infra-comp-utils/webpack-libs").complementWebpackConfig(
                 require("../infra-comp-utils/webpack-libs").createServerWebpackConfig(
-                    "./"+path.join("node_modules", "infrastructure-components", "assets", "server.tsx"), //entryPath: string,
+                    "./"+path.join("node_modules", "infrastructure-components", "dist" , "assets", "server.js"), //entryPath: string,
                     serverBuildPath, //use the buildpath from the parent plugin
                     serverName, // name of the server
                     {

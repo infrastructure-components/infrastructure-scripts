@@ -43,7 +43,7 @@ export const WebAppPlugin = (props: IWebAppPlugin): IPlugin => {
                 // a webapp has its own webpack configuration
                 webpackConfigs: [
                     require("../infra-comp-utils/webpack-libs").complementWebpackConfig(require("../infra-comp-utils/webpack-libs").createClientWebpackConfig(
-                        "./"+path.join("node_modules", "infrastructure-components", "assets", "client.tsx"), //entryPath: string,
+                        "./"+path.join("node_modules", "infrastructure-components", "dist" , "assets", "client.js"), //entryPath: string,
                         path.join(require("../infra-comp-utils/system-libs").currentAbsolutePath(), props.buildPath), //use the buildpath from the parent plugin
                         component.id,
                         {

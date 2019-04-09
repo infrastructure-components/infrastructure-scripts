@@ -47,7 +47,7 @@ export async function deploy (configFilePath: string, stage: string) {
 
     await Promise.all(
         // only copy webapps
-        parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").forEach(async wpConfig => {
+        parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
             await s3sync(parsedConfig.region, staticBucketName, path.join(parsedConfig.buildPath, wpConfig.name))
         })
     );
