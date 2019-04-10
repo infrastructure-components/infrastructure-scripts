@@ -20,7 +20,7 @@ export async function build (configFilePath: string) {
     // load and parse the configuration from the temporary folder
     const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath);
 
-    createSlsYaml(parsedConfig.slsConfigs, true);
+    await createSlsYaml(parsedConfig.slsConfigs, true);
 
     writeScriptsToPackageJson(
         configFilePath,

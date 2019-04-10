@@ -7,7 +7,6 @@
       "node"
     ],
 
-    // Target latest version of ECMAScript.
     "target": "es6",
 
     "isolatedModules": false,

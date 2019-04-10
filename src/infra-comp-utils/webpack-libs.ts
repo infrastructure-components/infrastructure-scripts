@@ -179,7 +179,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                     type: 'javascript/auto'
                 },
                 {
-                    test: /\.(ts|tsx)$/,
+                    test: /\.(ts|tsx|js|jsx)$/,
                     //include: __dirname,
                     exclude: [/node_modules/],
                     use: [{
@@ -211,11 +211,11 @@ export function complementWebpackConfig(webpackConfig: any) {
                     }]
 
                 },
-                {
+                /*{
                     enforce: "pre",
                     test: /\.(js|jsx)$/,
                     loader: require.resolve("source-map-loader")
-                },
+                },*/
                 {
                     test: /\.css$/,
                     /*the style loader does not work server-side, thus using css-loader only*/
