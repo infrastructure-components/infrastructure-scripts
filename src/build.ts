@@ -15,10 +15,10 @@ import {
  *
  * @param configFilePath
  */
-export async function build (configFilePath: string) {
+export async function build (configFilePath: string, stage: string | undefined) {
 
     // load and parse the configuration from the temporary folder
-    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath);
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage);
 
     await createSlsYaml(parsedConfig.slsConfigs, true);
 

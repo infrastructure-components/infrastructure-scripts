@@ -23,7 +23,7 @@ export async function deploy (configFilePath: string, stage: string) {
     const path = require('path');
     
     // load and parse the configuration from the temporary folder
-    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath);
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage);
 
     // TODO when adding environments, take the stage_path from it!
 

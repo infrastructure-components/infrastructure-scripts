@@ -13,10 +13,10 @@ import {
  *
  * @param configFilePath
  */
-export async function app (configFilePath: string, appName: string) {
+export async function app (configFilePath: string, appName: string, stage: string | undefined) {
 
     // load and parse the configuration from the temporary folder
-    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath);
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage);
 
 
     // get the webpack-configuration of the app

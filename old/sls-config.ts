@@ -369,5 +369,6 @@ export const toSlsConfig = (
                 }
             }
         }
-    }, slsConfig)
+    },
+    slsConfig)
 }
