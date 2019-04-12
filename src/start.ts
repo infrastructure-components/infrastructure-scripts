@@ -5,16 +5,24 @@
 
 
 //import { loadConfiguration, complementWebpackConfig, startDevServer } from './libs';
-import { ConfigTypes } from 'infrastructure-components';
+import { ConfigTypes, IConfigParseResult, PARSER_MODES } from 'infrastructure-components';
 
 
-import { startSlsOffline } from './infra-comp-utils/sls-libs';
+import {createSlsYaml, startSlsOffline} from './infra-comp-utils/sls-libs';
+import {parseConfiguration} from "./infra-comp-utils/configuration-lib";
 
 /**
  *
  * @param configFilePath
  */
-export async function start (configFilePath: string) {
+export async function start (configFilePath: string, stage: string | undefined) {
+
+    // load and parse the configuration from the temporary folder
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage, PARSER_MODES.MODE_START);
+
+
+    // (re-)create the serverless.yml
+    createSlsYaml(parsedConfig.slsConfigs, true);
 
     startSlsOffline(true);
 

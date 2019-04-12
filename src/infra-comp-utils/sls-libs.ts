@@ -119,6 +119,17 @@ export async function deploySls() {
 
 }
 
+
+export async function initDomain() {
+
+    // login in to Serverless/Aws
+    await slsLogin();
+
+    //  sls deploy && node -r dotenv/config -e 'require(\"./src/config\").s3sync()' dotenv_config_path=.dev.env",
+    await runSlsCmd(`sls create_domain`);
+
+}
+
 /**
  * convert json to yml: https://www.npmjs.com/package/json-to-pretty-yaml
  *

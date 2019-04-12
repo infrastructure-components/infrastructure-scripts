@@ -76,7 +76,7 @@ export function loadStaticConfiguration(configFilePath: string) {
 /**
  * prepares, loads, and parses the configuration
  */
-export async function parseConfiguration (configFilePath: string, stage: string | undefined): IConfigParseResult {
+export async function parseConfiguration (configFilePath: string, stage: string | undefined, parserMode: string): IConfigParseResult {
 
     // create a usable configuration
     const configPath = await prepareConfiguration(configFilePath);
@@ -85,7 +85,7 @@ export async function parseConfiguration (configFilePath: string, stage: string 
     const config = loadConfiguration(configPath, INFRASTRUCTURE_MODES.COMPILATION);
 
     // parse the configuration for plugins
-    const plugins = parseForPlugins(config, configFilePath, stage);
+    const plugins = parseForPlugins(config, configFilePath, stage, parserMode);
     console.log("plugins: ", plugins);
 
     // load the configuration statically (without objects)

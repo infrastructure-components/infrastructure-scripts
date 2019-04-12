@@ -6,25 +6,24 @@ import { createSlsYaml, toSlsConfig } from './infra-comp-utils/sls-libs';
 
 import { parseConfiguration } from './infra-comp-utils/configuration-lib';
 
-
-import {
-    IConfigParseResult,
-} from 'infrastructure-components';
+import { IEnvironmentArgs, IConfigParseResult, PARSER_MODES } from 'infrastructure-components';
 
 /**
  *
  * @param configFilePath
  */
-export async function build (configFilePath: string, stage: string | undefined) {
+export async function build (configFilePath: string) {
 
     // load and parse the configuration from the temporary folder
-    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage);
+    // when building, we do not provide a stage - this should run the environments in build mode (considering all of them)
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, undefined, PARSER_MODES.MODE_BUILD);
 
     await createSlsYaml(parsedConfig.slsConfigs, true);
 
     writeScriptsToPackageJson(
         configFilePath,
-        parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.name !== undefined).map(wpConfig => wpConfig.name)
+        parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.name !== undefined).map(wpConfig => wpConfig.name),
+        parsedConfig.environments
     );
 
     // now run the webpacks
@@ -41,7 +40,7 @@ export async function build (configFilePath: string, stage: string | undefined) 
 
 };
 
-export const writeScriptsToPackageJson = (configFilePath: string, webapps: Array<string>) => {
+export const writeScriptsToPackageJson = (configFilePath: string, webapps: Array<string>, environments: Array<IEnvironmentArgs>) => {
     const fs = require('fs');
 
     try {
@@ -50,16 +49,27 @@ export const writeScriptsToPackageJson = (configFilePath: string, webapps: Array
 
         let packageJson = JSON.parse(rawdata);
 
-        // TODO currently dev-environment hardcoded!
-        
-        packageJson["scripts"] = Object.assign({}, packageJson.scripts, {
-            start: `scripts start ${configFilePath}`,
-            deploy: `scripts .env deploy ${configFilePath} dev`,
-        }, ...webapps.map(app => {
-            var obj = {};
-            obj[app] = `scripts app ${configFilePath} ${app}`;
-            return obj;
-        }));
+        packageJson["scripts"] = Object.assign({}, packageJson.scripts,
+            ...environments.map(env => {
+                var result = {};
+                result["start-"+env.name] = `scripts start ${configFilePath} ${env.name}`;
+                result["deploy-"+env.name] = `scripts .env deploy ${configFilePath} ${env.name}`;
+
+                return result;
+            }),
+
+            ...webapps.map(app => {
+                var obj = {};
+                obj[app] = `scripts app ${configFilePath} ${app}`;
+                return obj;
+            }),
+
+            ...environments.filter(env => env.domain !== undefined).map(env => {
+                var result = {};
+                result["domain-"+env.name] = `scripts .env domain ${configFilePath} ${env.name}`;
+                return result;
+            })
+        );
 
         fs.writeFileSync('package.json', JSON.stringify(packageJson, null , 2));
         

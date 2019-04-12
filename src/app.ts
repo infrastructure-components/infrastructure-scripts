@@ -7,6 +7,7 @@ import { parseConfiguration } from './infra-comp-utils/configuration-lib';
 
 import {
     IConfigParseResult,
+    PARSER_MODES
 } from 'infrastructure-components';
 
 /**
@@ -16,7 +17,7 @@ import {
 export async function app (configFilePath: string, appName: string, stage: string | undefined) {
 
     // load and parse the configuration from the temporary folder
-    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage);
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage, PARSER_MODES.MODE_START);
 
 
     // get the webpack-configuration of the app

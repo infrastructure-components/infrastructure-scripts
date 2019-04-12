@@ -41,6 +41,7 @@ const { build } = require('../dist/build');
 const { start } = require('../dist/start');
 const { app } = require('../dist/app');
 const { deploy } = require('../dist/deploy');
+const { domain } = require('../dist/domain');
 
 if (args.length > 0) {
 
