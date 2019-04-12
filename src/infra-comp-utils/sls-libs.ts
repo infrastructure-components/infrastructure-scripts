@@ -15,7 +15,7 @@ custom:
   # allows accessing the offline backend when using Docker
   serverless-offline:
     host: 0.0.0.0
-    port: \${self:provider.PORT, env:PORT, '3000'}
+    port: \${self:provider.port, env:PORT, '3000'}
 
 package:
 
@@ -202,7 +202,7 @@ export const toSlsConfig = (
         },
 
         custom: {
-            stage: "${self:provider.STAGE, env:STAGE, 'dev'}"
+            stage: "${self:provider.stage, env:STAGE, 'dev'}"
         },
 
         package: {
@@ -242,20 +242,20 @@ export const toSlsConfig = (
             region: region, //"${env:AWS_REGION}",
 
             // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
-            stackName: "${self:service.name}-${self:provider.STAGE, env:STAGE, 'dev'}",
+            stackName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}",
 
             // Use a custom name for the API Gateway API
-            apiName: "${self:service.name}-${self:provider.STAGE, env:STAGE, 'dev'}-api",
+            apiName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}-api",
 
             // name of the static bucket, must match lib/getStaticBucketName
-            staticBucket: `${stackName}-${assetsPath}-`+"${self:provider.STAGE, env:STAGE, 'dev'}",
+            staticBucket: `${stackName}-${assetsPath}-`+"${self:provider.stage, env:STAGE, 'dev'}",
 
             // set the environment variables
             environment: {
                 // set the STAGE_PATH environment variable to the same we use during the build process
-                STAGE: "${self:provider.STAGE, env:STAGE, 'dev'}",
-                STAGE_PATH: "${self:provider.STAGE_PATH, env:STAGE_PATH, ''}",
-                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.STAGE, env:STAGE, \'dev\'}" ] ]  }'
+                STAGE: "${self:provider.stage, env:STAGE, 'dev'}",
+                STAGE_PATH: "${self:provider.stage, env:STAGE_PATH, ''}",
+                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.stage, env:STAGE, \'dev\'}" ] ]  }'
 
             },
 
@@ -376,7 +376,7 @@ export const toSlsConfig = (
                         Type: 'AWS::ApiGateway::Deployment',
                         Properties: {
                         RestApiId: "!Ref ApiGatewayRestApi",
-                            StageName: "${self:provider.STAGE, env:STAGE, 'dev'}"
+                            StageName: "${self:provider.stage, env:STAGE, 'dev'}"
                     }
                 }
             }
