@@ -63,7 +63,10 @@ export const createClientWebpackConfig = (
                 filename: appName+".bundle.js"
             },
             target: "web",
-            name: appName
+            name: appName,
+            node: {
+               fs: "empty"
+            }
         }
     );
 
@@ -129,6 +132,7 @@ export const createWebpackConfig = (
 export function complementWebpackConfig(webpackConfig: any) {
     const path = require('path');
 
+
     if (webpackConfig !== undefined) {
 
         /**
@@ -150,7 +154,7 @@ export function complementWebpackConfig(webpackConfig: any) {
             webpackConfig.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx', ]; //'.json'
         } else {
             webpackConfig.resolve = {
-                extensions: ['.js', '.jsx', '.ts', '.tsx']
+                extensions: ['.js', '.jsx', '.ts', '.tsx',]
             };
         }
 
@@ -221,7 +225,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                     /*the style loader does not work server-side, thus using css-loader only*/
                     use: target === "node" ?
                         [require.resolve('css-loader')] :
-                        [require('style-loader'), require.resolve('css-loader')]
+                        [require.resolve('style-loader'), require.resolve('css-loader')]
                 }, {
                     test: /\.(png|woff|woff2|eot|ttf|svg)$/,
                     loader: require.resolve('url-loader')

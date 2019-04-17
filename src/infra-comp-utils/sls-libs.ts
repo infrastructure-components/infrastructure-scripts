@@ -183,8 +183,172 @@ export async function startSlsOffline (keepSlsYaml: boolean) {
 
 }
 
+export const toSpaSlsConfig = (
+    stackName: string,
+    buildPath: string,
+    region: string,
+    domain: string | undefined) => {
+
+    const path = require ('path');
 
 
+    const distributionConfig = {
+        Origins: [
+            {
+                DomainName: "${self:provider.staticBucket}.s3.amazonaws.com",
+                Id: stackName,
+                CustomOriginConfig: {
+                    HTTPPort: 80,
+                    HTTPSPort: 443,
+                    OriginProtocolPolicy: "https-only",
+                }
+            }
+        ],
+        Enabled: "'true'",
+
+        DefaultRootObject: "index.html",
+        CustomErrorResponses: [{
+            ErrorCode: 404,
+            ResponseCode: 200,
+            ResponsePagePath: "/index.html"
+        }],
+
+        DefaultCacheBehavior: {
+            AllowedMethods: [
+                "DELETE",
+                "GET",
+                "HEAD",
+                "OPTIONS",
+                "PATCH",
+                "POST",
+                "PUT"
+            ],
+                TargetOriginId: stackName,
+                ForwardedValues: {
+                QueryString: "'false'",
+                    Cookies: {
+                    Forward: "none"
+                }
+            },
+            ViewerProtocolPolicy: "redirect-to-https"
+        },
+        ViewerCertificate: {
+            AcmCertificateArn: "${self:provider.certArn}",
+            SslSupportMethod: "sni-only",
+        }
+
+
+    };
+    //CloudFrontDefaultCertificate: "'true'"
+
+
+    if (domain !== undefined) {
+        distributionConfig["Aliases"] = ["${self:provider.customDomainName}"]
+    };
+
+    const result = {
+        service: {
+            // it is allowed to use env-variables, but don't forget to specify them
+            // e.g. "${env:CLOUDSTACKNAME}-${env:STAGE}"
+            name: stackName
+        },
+
+        plugins: "- serverless-single-page-app-plugin",
+
+
+        provider: {
+            // set stage to environment variables
+            //stage: "${env:STAGE}", done through the environment!
+
+            // # take the region from the environment variables
+            region: region, //"${env:AWS_REGION}",
+
+            // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
+            stackName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}",
+
+            staticBucket: stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
+        },
+
+        resources: {
+            Resources: {
+                WebAppS3Bucket: {
+                    Type: "AWS::S3::Bucket",
+                    Properties: {
+                        // the bucket name is the combination of the cloudstackname, a minus, and the name of the assetsdir
+                        BucketName: "${self:provider.staticBucket}",
+                        AccessControl: "PublicRead",
+                        WebsiteConfiguration: {
+                            IndexDocument: "index.html",
+                            ErrorDocument: "index.html"
+                        }
+                    }
+                },
+
+                WebAppS3BucketPolicy: {
+                    Type: "AWS::S3::BucketPolicy",
+                    Properties: {
+                        Bucket: {
+                            Ref: "WebAppS3Bucket"
+                        },
+                        PolicyDocument: {
+                            Statement: {
+                                Sid: "PublicReadGetObject",
+                                Effect: "Allow",
+                                Principal: '"*"',
+                                Action: ["s3:GetObject"],
+                                Resource: {
+                                    "Fn::Join": "[\"\", [\"arn:aws:s3:::\", {\"Ref\": \"WebAppS3Bucket\" }, \"/*\"]]"
+                                }
+
+
+                            }
+                        }
+                    }
+                },
+
+                WebAppCloudFrontDistribution: {
+                    Type: "AWS::CloudFront::Distribution" ,
+                    Properties: {
+                        DistributionConfig: distributionConfig
+                    }
+                },
+
+
+
+
+            },
+
+            Outputs: {
+                WebAppCloudFrontDistributionOutput: {
+                    Value: {
+                        "Fn::GetAtt": "[ WebAppCloudFrontDistribution, DomainName ]"
+                    }
+                }
+            }
+        }
+    }
+
+    if (domain !== undefined) {
+        result.resources.Resources["DnsRecord"] = {
+            Type: "AWS::Route53::RecordSet",
+                Properties: {
+                AliasTarget: {
+                    DNSName: "!GetAtt WebAppCloudFrontDistribution.DomainName",
+                        HostedZoneId: "Z2FDTNDATAQYW2"
+                },
+                HostedZoneName: "${self:provider.hostedZoneName}.",
+                    Name: "${self:provider.customDomainName}.",
+                    Type: "'A'"
+            }
+        }
+    }
+
+    return result;
+};
+
+/**
+ * Creates a Serverless-configuration of an Isomorphic App
+ */
 export const toSlsConfig = (
     stackName: string,
     serverName: string,
@@ -282,13 +446,7 @@ export const toSlsConfig = (
                             WebsiteConfiguration: {
                             IndexDocument: "index.html"
                         },
-                        LifecycleConfiguration: {
-                            Rules: [{
-                                Id: "S3ExpireMonthly",
-                                ExpirationInDays: 30,
-                                Status: "Enabled"
-                            }]
-                        },
+
                         CorsConfiguration: {
                             CorsRules: [{
                                 AllowedMethods: ['GET'],
@@ -384,6 +542,13 @@ export const toSlsConfig = (
     };
 };
 
+/* WHY SHOULD WE LET THE FILES EXPIRE?! LifecycleConfiguration: {
+ Rules: [{
+ Id: "S3ExpireMonthly",
+ ExpirationInDays: 30,
+ Status: "Enabled"
+ }]
+ },*/
 
 /**
  * Login to Severless framework
