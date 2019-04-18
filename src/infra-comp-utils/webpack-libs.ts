@@ -222,6 +222,7 @@ export function complementWebpackConfig(webpackConfig: any) {
                 },*/
                 {
                     test: /\.css$/,
+                    include: /node_modules/,
                     /*the style loader does not work server-side, thus using css-loader only*/
                     use: target === "node" ?
                         [require.resolve('css-loader')] :

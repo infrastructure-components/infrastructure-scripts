@@ -192,60 +192,6 @@ export const toSpaSlsConfig = (
     const path = require ('path');
 
 
-    const distributionConfig = {
-        Origins: [
-            {
-                DomainName: "${self:provider.staticBucket}.s3.amazonaws.com",
-                Id: stackName,
-                CustomOriginConfig: {
-                    HTTPPort: 80,
-                    HTTPSPort: 443,
-                    OriginProtocolPolicy: "https-only",
-                }
-            }
-        ],
-        Enabled: "'true'",
-
-        DefaultRootObject: "index.html",
-        CustomErrorResponses: [{
-            ErrorCode: 404,
-            ResponseCode: 200,
-            ResponsePagePath: "/index.html"
-        }],
-
-        DefaultCacheBehavior: {
-            AllowedMethods: [
-                "DELETE",
-                "GET",
-                "HEAD",
-                "OPTIONS",
-                "PATCH",
-                "POST",
-                "PUT"
-            ],
-                TargetOriginId: stackName,
-                ForwardedValues: {
-                QueryString: "'false'",
-                    Cookies: {
-                    Forward: "none"
-                }
-            },
-            ViewerProtocolPolicy: "redirect-to-https"
-        },
-        ViewerCertificate: {
-            AcmCertificateArn: "${self:provider.certArn}",
-            SslSupportMethod: "sni-only",
-        }
-
-
-    };
-    //CloudFrontDefaultCertificate: "'true'"
-
-
-    if (domain !== undefined) {
-        distributionConfig["Aliases"] = ["${self:provider.customDomainName}"]
-    };
-
     const result = {
         service: {
             // it is allowed to use env-variables, but don't forget to specify them
@@ -304,44 +250,12 @@ export const toSpaSlsConfig = (
                             }
                         }
                     }
-                },
-
-                WebAppCloudFrontDistribution: {
-                    Type: "AWS::CloudFront::Distribution" ,
-                    Properties: {
-                        DistributionConfig: distributionConfig
-                    }
-                },
-
-
-
-
-            },
-
-            Outputs: {
-                WebAppCloudFrontDistributionOutput: {
-                    Value: {
-                        "Fn::GetAtt": "[ WebAppCloudFrontDistribution, DomainName ]"
-                    }
                 }
-            }
-        }
-    }
 
-    if (domain !== undefined) {
-        result.resources.Resources["DnsRecord"] = {
-            Type: "AWS::Route53::RecordSet",
-                Properties: {
-                AliasTarget: {
-                    DNSName: "!GetAtt WebAppCloudFrontDistribution.DomainName",
-                        HostedZoneId: "Z2FDTNDATAQYW2"
-                },
-                HostedZoneName: "${self:provider.hostedZoneName}.",
-                    Name: "${self:provider.customDomainName}.",
-                    Type: "'A'"
             }
         }
     }
+    
 
     return result;
 };

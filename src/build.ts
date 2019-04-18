@@ -24,7 +24,8 @@ export async function build (configFilePath: string) {
         configFilePath,
         parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.name !== undefined).map(wpConfig => wpConfig.name),
         parsedConfig.environments,
-        parsedConfig.supportOfflineStart
+        parsedConfig.supportOfflineStart,
+        parsedConfig.supportCreateDomain
     );
 
     // now run the webpacks
@@ -36,6 +37,7 @@ export async function build (configFilePath: string) {
         console.log ("--- done ---")
     }));
 
+    console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
     // now run the post-build functions
     await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
 
@@ -55,6 +57,13 @@ export const writeScriptsToPackageJson = (
         let rawdata = fs.readFileSync('package.json');
 
         let packageJson = JSON.parse(rawdata);
+
+        const domains =  (supportCreateDomain == true || supportCreateDomain == undefined) ?
+            environments.filter(env => env.domain !== undefined).map(env => {
+            var result = {};
+            result["domain-"+env.name] = `scripts .env domain ${configFilePath} ${env.name}`;
+            return result;
+        }) : [{}];
 
         packageJson["scripts"] = Object.assign({}, packageJson.scripts,
             ...environments.map(env => {
@@ -77,12 +86,7 @@ export const writeScriptsToPackageJson = (
                 return obj;
             }),
 
-            (supportCreateDomain == true || supportCreateDomain == undefined) ?
-                ...environments.filter(env => env.domain !== undefined).map(env => {
-                    var result = {};
-                    result["domain-"+env.name] = `scripts .env domain ${configFilePath} ${env.name}`;
-                    return result;
-                }) : {}
+            ...domains
         );
 
         fs.writeFileSync('package.json', JSON.stringify(packageJson, null , 2));

@@ -23,13 +23,19 @@ export async function domain (configFilePath: string, stage: string) {
     const path = require('path');
     
     // load and parse the configuration from the temporary folder
-    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage, PARSER_MODES.MODE_DEPLOY);
+    const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage, PARSER_MODES.MODE_DOMAIN);
 
     // (re-)create the serverless.yml
     createSlsYaml(parsedConfig.slsConfigs, true);
 
     // start the sls-config
-    await initDomain();
+    // DONE in the respective plugins, initDomain only for IsomorphicApps
+    // await initDomain();
+
+    console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
+    
+    // now run the post-build functions
+    await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
 
 
 };
