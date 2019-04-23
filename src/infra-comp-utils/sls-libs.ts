@@ -5,17 +5,13 @@ import { YamlEditor } from '../yaml-edit';
  */
 export const SERVERLESS_YML = `service:
 
+#- serverless-pseudo-parameters
 plugins:
-  # allows running the stack locally on the dev-machine
-  - serverless-offline
-  - serverless-pseudo-parameters
+  
   
 # the custom section
 custom:
-  # allows accessing the offline backend when using Docker
-  serverless-offline:
-    host: 0.0.0.0
-    port: \${self:provider.port, env:PORT, '3000'}
+  
 
 package:
 
@@ -255,7 +251,7 @@ export const toSpaSlsConfig = (
             }
         }
     }
-    
+
 
     return result;
 };
@@ -332,7 +328,7 @@ export const toSlsConfig = (
             environment: {
                 // set the STAGE_PATH environment variable to the same we use during the build process
                 STAGE: "${self:provider.stage, env:STAGE, 'dev'}",
-                STAGE_PATH: "${self:provider.stage, env:STAGE_PATH, ''}",
+                STAGE_PATH: "${self:provider.stage_path, env:STAGE_PATH, ''}",
                 DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.stage, env:STAGE, \'dev\'}" ] ]  }'
 
             },

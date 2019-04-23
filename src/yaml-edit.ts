@@ -41,6 +41,8 @@ export const YamlEditor = (input) => {
     }
 
     function generateSnippet(doc, indentLevel, isArray) {
+        console.log("generateSnippet" , doc, " - array: " , isArray)
+
         let keys = Object.keys(doc);
         let snippet = '';
         let lines = [];
@@ -103,7 +105,12 @@ export const YamlEditor = (input) => {
                 let val = doc[k];
 
                 if (typeof(val) != 'object') {
-                    lines.push(indent + k + ': ' + val);
+                    if (!isArray && keys.every((el: any,idx,arr) => !isNaN(el))) {
+                        lines.push(indent + '- ' + val);
+                    } else {
+                        lines.push(indent + k + ': ' + val);
+                    }
+
                 } else {
                     lines.push(indent + k + ':');
 

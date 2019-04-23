@@ -41,7 +41,50 @@ export async function build (configFilePath: string) {
     // now run the post-build functions
     await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
 
+    writeMessage();
+
 };
+
+const max = 76; // + 2 spaces + 2 frame == 80
+const clc = require('cli-color');
+
+const frameText = (txt, fColor) =>  "║ "+fColor(txt)+"".concat(new Array(Math.max(max-txt.length,0)).join(" ")).concat(" ║");
+const frameTop = () => "\n╔═".concat(new Array(max).join("═"), "═╗");
+const frameBottom = () => "╚═".concat(new Array(max).join("═"), "═╝\n");
+const singleLine = () => "║-".concat(new Array(max).join("-"), "-║")
+const emptyLine = () => frameText("", clc.black);
+
+const writeMessage = () => {
+
+    console.log(frameTop());
+    console.log(emptyLine());
+    console.log(frameText("Thank you for using Infrastructure-Components!", clc.magenta.bold));
+    console.log(emptyLine());
+
+    console.log(singleLine());
+    console.log(emptyLine());
+
+    console.log(frameText("The Infrastructure-Components are under Active Development", clc.green));
+
+    console.log(emptyLine());
+
+    console.log(frameText(" -- In case you need help or discovered a bug, please let us know:", clc.magenta));
+    console.log(frameText("    https://spectrum.chat/infrastructure", clc.green));
+
+
+    console.log(emptyLine());
+
+    console.log(frameText(" -- Make sure you don't miss the next update or the next feature! ", clc.magenta));
+
+
+    console.log(frameText("    - on Medium.com:  https://medium.com/@fzickert", clc.green));
+    console.log(frameText("    - in our Docs:    https://infrastructure-components.readthedocs.io", clc.green));
+    console.log(frameText("    - on our Website: https://www.infrastructure-components.com", clc.green));
+
+    console.log(emptyLine());
+    console.log(frameBottom());
+
+}
 
 export const writeScriptsToPackageJson = (
     configFilePath: string,
