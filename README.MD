@@ -16,43 +16,24 @@ npm install --save-dev infrastructure-scripts
 ```
 
 This library uses the [Serverless framework](https://serverless.com/) that you need to install globally.
-`serverless-offline` lets you start your application on localhost
 
 ```
 npm install -g serverless
-npm install --save-dev serverless-offline
 ```
 
-[infrastructure-components](https://github.com/infrastructure-components/infrastructure-components) requires the following
-libraries during runtime:
-
-- express
-- infrastructure-components
-- react
-- react-dom
-- react-helmet
-- react-router
-- react-router-dom
-- serverless-http
-- styled-components
-
+You can install [infrastructure-components](https://github.com/infrastructure-components/infrastructure-components) easily
 
 ```
-npm install --save \
-    express \
-    infrastructure-components \
-    react \
-    react-dom \
-    react-helmet \
-    react-router \
-    react-router-dom \
-    serverless-http \
-    styled-components
-
+npm install --save infrastructure-components
 ```
+
+Finally, apps (e.g. single-page-app, isomorphic-app) and components (environment, webapp) can have further dependencies.
+Have a look at them in [our documentation](https://infrastructure-components.readthedocs.io).
 
 
 ## Help and Support
+
+Have a look at our [documentation](https://infrastructure-components.readthedocs.io).
 
 Infrastructure-Components are under active development. If you find a bug or need support of any kind,
 please have a look at our [Spectrum-Chat](https://spectrum.chat/infrastructure).
