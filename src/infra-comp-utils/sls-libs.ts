@@ -528,11 +528,7 @@ export async function invalidateCloudFrontCache (domain: string | undefined) {
             }
         }
     });
-
-
-    //const distributionId = 'E1S3JGLQ4IBLR0'; // something like this
-
-
+    
 };
 
 
