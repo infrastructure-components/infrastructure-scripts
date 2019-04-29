@@ -36,6 +36,32 @@ export function runWebpack (webpackConfig) {
     });
 }
 
+/*
+const getPathToAssets = (assetsFolder: string | undefined, stagePath: string | undefined) => {
+    // the result must have a leading slash here!
+
+
+    //console.log("stage: ", stage);
+    const path = require('path');
+
+    if (assetsFolder == undefined) {
+        return "/";
+    }
+
+    // we only need to do something when we have a stagePath
+    if (stagePath !== undefined && stagePath !== "undefined") {
+        return  "/"+path.join(stagePath, assetsFolder)+"/";
+
+    } else {
+        // we just need to append the assets-directory
+        return "/"+assetsFolder+"/";
+    }
+
+
+
+    //return /*(stage !== undefined && stage !== "undefined" ? path.join(stage, process.env.ASSETSDIR): )* / process.env.ASSETSDIR + "/";
+};*/
+
 /**
  * creates a basic webpack-configuration of a WebApp. Must be complemented using [[complementWebpackConfig]]
  *
@@ -49,6 +75,8 @@ export const createClientWebpackConfig = (
     entryPath: string,
     buildPath: string,
     appName: string,
+    assetsPath: string | undefined,
+    stagePath: string | undefined,
     aliasDict: any,
     replaceDict: any) => {
 
@@ -60,7 +88,12 @@ export const createClientWebpackConfig = (
         {
             output: {
                 path: clientPath,
-                filename: appName+".bundle.js"
+                filename: appName+".bundle.js",
+                /**
+                 * The public path is the relative path from the url where the `bundle.js` will be found
+                 * The publicPath is required of partly-bundles created through async-components
+                 */
+                //publicPath: getPathToAssets(assetsPath,stagePath)
             },
             target: "web",
             name: appName,

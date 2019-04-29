@@ -41,7 +41,7 @@ export const YamlEditor = (input) => {
     }
 
     function generateSnippet(doc, indentLevel, isArray) {
-        console.log("generateSnippet" , doc, " - array: " , isArray)
+        //console.log("generateSnippet" , doc, " - array: " , isArray)
 
         let keys = Object.keys(doc);
         let snippet = '';
