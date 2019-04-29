@@ -6,6 +6,7 @@
 import { parseConfiguration } from './infra-comp-utils/configuration-lib';
 import { deploySls, s3sync, createSlsYaml } from './infra-comp-utils/sls-libs';
 import * as deepmerge from 'deepmerge';
+import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
 
 import {
@@ -29,6 +30,16 @@ export async function deploy (configFilePath: string, stage: string) {
 
     // (re-)create the serverless.yml
     createSlsYaml(parsedConfig.slsConfigs, true);
+
+    // now run the webpacks
+    await Promise.all(parsedConfig.webpackConfigs.map(async wpConfig => {
+        console.log("wpConfig: ", wpConfig);
+
+        await runWebpack(wpConfig)
+
+        console.log ("--- done ---")
+    }));
+
 
     // start the sls-config
     await deploySls();

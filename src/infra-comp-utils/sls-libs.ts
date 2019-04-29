@@ -479,6 +479,63 @@ export function slsLogin () {
 
 };
 
+export async function invalidateCloudFrontCache (domain: string | undefined) {
+
+    if (domain == undefined) {
+        return;
+    }
+
+    console.log("invalidating CloudFront-Cache...")
+
+    const awsCloudfrontInvalidate = require('aws-cloudfront-invalidate');
+
+    const AWS = require("aws-sdk");
+    const cloudfront = new AWS.CloudFront();
+
+    const distributions = cloudfront.listDistributions({}, function(err, data) {
+        if (err) {
+            console.log(err, err.stack); // an error occurred
+        }
+        else if (data.DistributionList !== undefined && data.DistributionList.Items !== undefined){
+            const distributions = data.DistributionList.Items;
+
+            //console.log(distributions);           // successful response
+            const distribution = distributions.find(entry => {
+                if (entry.Aliases == undefined || entry.Aliases.Items == undefined) {
+                    return false;
+                }
+
+                //console.log(entry.Aliases.Items);
+
+                return entry.Aliases.Items.find(alias => alias === domain) !== undefined
+
+            });
+
+            if (distribution) {
+                console.log(
+                    `Invalidating CloudFront distribution with id: ${distribution.Id}`
+                );
+
+                awsCloudfrontInvalidate(distribution.Id).then((invalidationData) => {
+                    console.log('Invalidation created', invalidationData.Invalidation.Id, " ... your domain will serve your new version in a few minutes ...");
+                });
+
+            } else {
+                const message = `Could not find distribution with domain ${domain}`;
+                const error = new Error(message);
+                console.log(message);
+                throw error;
+            }
+        }
+    });
+
+
+    //const distributionId = 'E1S3JGLQ4IBLR0'; // something like this
+
+
+};
+
+
 /**
  * uploads the static assets (compiled client) to the S3-bucket of the current stage
  * implements [[DeployStaticAssestsSpec]]
