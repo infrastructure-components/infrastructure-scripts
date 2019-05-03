@@ -5,9 +5,9 @@ import { YamlEditor } from '../yaml-edit';
  */
 export const SERVERLESS_YML = `service:
 
-#- serverless-pseudo-parameters
+
 plugins:
-  
+  - serverless-pseudo-parameters  
   
 # the custom section
 custom:
@@ -528,7 +528,7 @@ export async function invalidateCloudFrontCache (domain: string | undefined) {
             }
         }
     });
-    
+
 };
 
 
