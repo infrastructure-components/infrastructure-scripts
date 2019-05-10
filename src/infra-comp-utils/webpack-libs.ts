@@ -1,4 +1,3 @@
-
 /**
  * runs the provided webpack-configuration (as js-object)
  * 
@@ -162,7 +161,7 @@ export const createWebpackConfig = (
 
 
 
-export function complementWebpackConfig(webpackConfig: any) {
+export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
     const path = require('path');
 
 
@@ -179,7 +178,7 @@ export function complementWebpackConfig(webpackConfig: any) {
 
         //webpackConfig.context = path.join(require("./system-libs").currentAbsolutePath());
 
-        webpackConfig.mode = "development";
+        webpackConfig.mode = isProd ? "production" : "development";
 
         webpackConfig.devtool = 'source-map';
 
@@ -191,11 +190,13 @@ export function complementWebpackConfig(webpackConfig: any) {
             };
         }
 
+        if (!isProd) {
+            webpackConfig.optimization = {
+                // We no not want to minimize our code.
+                minimize: false
+            };
+        }
 
-        webpackConfig.optimization = {
-            // We no not want to minimize our code.
-            minimize: false
-        };
 
         webpackConfig.performance = {
             // Turn off size warnings for entry points
@@ -217,8 +218,23 @@ export function complementWebpackConfig(webpackConfig: any) {
                 },
                 {
                     test: /\.(ts|tsx|js|jsx)$/,
-                    //include: __dirname,
-                    exclude: [/node_modules/],
+                    /*include: [
+                        path.join(currentAbsolutePath(),
+                            "node_modules",
+                            "infrastructure-components"
+                        ),
+                        path.join(currentAbsolutePath(),
+                            "node_modules",
+                            "react-router-dom"
+                        ),
+                        path.join(currentAbsolutePath(),
+                            "node_modules",
+                            "react-apollo"
+                        )
+                    ],*/
+                    // we must NOT exclude node_modules for we use these modules as aliases! TODO ????
+                    //exclude: [/node_modules/],
+                    exclude: /node_modules\/(?!(infrastructure-components|react-router-dom|react-apollo)\/).*/,
                     use: [{
                         /**
                          * The Babel loader compiles Typescript to plain Javascript. The Babel compile options

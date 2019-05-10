@@ -40,6 +40,10 @@ export async function deploy (configFilePath: string, stage: string) {
         console.log ("--- done ---")
     }));
 
+    console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
+    // now run the post-build functions
+    await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
+
 
     // start the sls-config
     await deploySls();
@@ -63,8 +67,5 @@ export async function deploy (configFilePath: string, stage: string) {
         })
     );
 
-    console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
-    // now run the post-build functions
-    await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
 
 };
