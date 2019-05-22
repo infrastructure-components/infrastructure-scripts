@@ -97,7 +97,11 @@ export const createClientWebpackConfig = (
             target: "web",
             name: appName,
             node: {
-               fs: "empty"
+                fs: "empty",
+                module: "empty",
+                net: "empty",
+                tls: "empty",
+                v8: "empty",
             }
         }
     );
@@ -143,9 +147,7 @@ export const createWebpackConfig = (
             alias: aliasDict,
         },
         plugins: [
-            new webpack.DefinePlugin(Object.assign({
-
-            }, replaceDict)),
+            new webpack.DefinePlugin(Object.assign({}, replaceDict)),
 
             // TODO see: https://remarkablemark.org/blog/2017/02/25/webpack-ignore-module/
             // TODO get the list of plugins programmatically, not hard-coded like now!
@@ -180,7 +182,7 @@ export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
 
         webpackConfig.mode = isProd ? "production" : "development";
 
-        webpackConfig.devtool = 'source-map';
+
 
         if (webpackConfig.resolve !== undefined) {
             webpackConfig.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx', ]; //'.json'
@@ -195,6 +197,8 @@ export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
                 // We no not want to minimize our code.
                 minimize: false
             };
+
+            webpackConfig.devtool = 'source-map';
         }
 
 

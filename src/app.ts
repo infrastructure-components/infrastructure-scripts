@@ -23,6 +23,7 @@ export async function app (configFilePath: string, appName: string, stage: strin
     // get the webpack-configuration of the app
     const wpConfig = parsedConfig.webpackConfigs.reduce(
         (res, wpConfig) => {
+            //console.log("found webapp: ", wpConfig.name)
             return res !== undefined ? res : (wpConfig.name === appName ? wpConfig : undefined)
         }, undefined
     );

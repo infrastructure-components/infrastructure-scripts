@@ -23,21 +23,26 @@ import {
 export async function deploy (configFilePath: string, stage: string) {
 
     const path = require('path');
-    
+    const rimraf = require("rimraf");
+
+
     // load and parse the configuration from the temporary folder
     const parsedConfig: IConfigParseResult = await parseConfiguration(configFilePath, stage, PARSER_MODES.MODE_DEPLOY);
+
+    // delete the build-folder
+    rimraf.sync(parsedConfig.buildPath);
 
 
     // (re-)create the serverless.yml
     createSlsYaml(parsedConfig.slsConfigs, true);
 
-    // now run the webpacks
-    await Promise.all(parsedConfig.webpackConfigs.map(async wpConfig => {
+    // now run the webpacks - except the web-targets
+    await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target !== "web").map(async wpConfig => {
         console.log("wpConfig: ", wpConfig);
 
         await runWebpack(wpConfig)
 
-        console.log ("--- done ---")
+        console.log ("--- server webpacks done ---")
     }));
 
     console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
@@ -56,6 +61,15 @@ export async function deploy (configFilePath: string, stage: string) {
     env !== undefined && env.name !== undefined ? env.name :*/
 
     const staticBucketName = getStaticBucketName(parsedConfig.stackName, parsedConfig.assetsPath, stage);
+
+    // now run the web-targets webpacks -
+    await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
+        console.log("wpConfig: ", wpConfig);
+
+        await runWebpack(wpConfig)
+
+        console.log ("--- client webpacks done ---")
+    }));
 
     // copy the client apps to the assets-folder
     console.log("start S3 Sync");

@@ -69,6 +69,7 @@ export function copyAssets( source, targetFolder ) {
                 copyFolderRecursiveSync( curSource, targetFolder );
             } else {
                 fs.copyFileSync( curSource, path.join(targetFolder, path.parse(curSource).base) );
+                //fs.unlinkSync(curSource);
             }
         } );
     }
