@@ -101,7 +101,7 @@ export const createClientWebpackConfig = (
                 module: "empty",
                 net: "empty",
                 tls: "empty",
-                v8: "empty",
+                child_process: "empty",
             }
         }
     );
