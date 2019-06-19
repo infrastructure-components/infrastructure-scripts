@@ -34,6 +34,11 @@ export async function start (configFilePath: string, stage: string | undefined) 
         console.log ("--- done ---")
     }));
 
+    await require('infrastructure-components').fetchData("offline", {
+        proj: parsedConfig.stackName,
+        envi: stage
+    });
+
     console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
     // now run the post-build functions
     await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));

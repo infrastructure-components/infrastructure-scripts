@@ -74,7 +74,7 @@ export function existsSlsYml () {
     return true;
 }
 
-async function runSlsCmd(slsCmd: string, onStdOut?: (data) => void) {
+export async function runSlsCmd(slsCmd: string, onStdOut?: (data) => void, hideLog?: boolean) {
     const cmd = require('node-cmd');
 
     return new Promise((resolve, reject) => {
@@ -85,7 +85,10 @@ async function runSlsCmd(slsCmd: string, onStdOut?: (data) => void) {
             async function(data) {
                 data_line += data;
                 if (data_line[data_line.length-1] == '\n') {
-                    console.log(data_line);
+                    if (!hideLog) {
+                        console.log(data_line);
+
+                    }
 
                     if (onStdOut !== undefined) {
                         onStdOut(data_line);

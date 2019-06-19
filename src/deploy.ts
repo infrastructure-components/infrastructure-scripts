@@ -4,7 +4,7 @@
  */
 
 import { parseConfiguration } from './infra-comp-utils/configuration-lib';
-import { deploySls, s3sync, createSlsYaml } from './infra-comp-utils/sls-libs';
+import { deploySls, s3sync, createSlsYaml, runSlsCmd } from './infra-comp-utils/sls-libs';
 import * as deepmerge from 'deepmerge';
 import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
@@ -14,6 +14,7 @@ import {
     PARSER_MODES,
     getStaticBucketName
 } from 'infrastructure-components';
+
 
 /**
  * uses the current serverless.yml (created by previous build!) to deploy the stack
@@ -71,6 +72,7 @@ export async function deploy (configFilePath: string, stage: string) {
         console.log ("--- client webpacks done ---")
     }));
 
+
     // copy the client apps to the assets-folder
     console.log("start S3 Sync");
 
@@ -81,5 +83,50 @@ export async function deploy (configFilePath: string, stage: string) {
         })
     );
 
+
+    var eps: any = {};
+
+    await runSlsCmd("echo $(sls info)", data => {
+        //console.log("data: " , data);
+
+        eps = data.split(" ").reduce(({inSection, endpoints}, val, idx) => {
+            //console.log("eval: " , val);
+
+            if (inSection && val.indexOf("https://") > -1) {
+                return { inSection: true, endpoints: endpoints.concat(
+                    val.indexOf("{proxy+}") == -1 ? [val] : []
+                )}
+            }
+
+            if (val.startsWith("endpoints:")) {
+                return { inSection: true, endpoints: endpoints }
+            }
+
+            if (val.startsWith("functions:")) {
+                return { inSection: false, endpoints: endpoints }
+            }
+
+            return { inSection: inSection, endpoints: endpoints }
+
+        }, {inSection: false, endpoints: []});
+
+        console.log("endpoints" , eps)
+
+    }, false);
+
+
+    const data = Object.assign({
+        proj: parsedConfig.stackName,
+        envi: stage,
+        domain: parsedConfig.domain
+    }, eps.endpoints.length > 0 ? { endp: eps.endpoints[0]} : {});
+
+    console.log("analytics: " , data);
+
+    await require('infrastructure-components').fetchData("deploy", data);
+    
+    if (eps.length > 0) {
+        console.log("Your React-App is now available at: ", eps[0])
+    }
 
 };

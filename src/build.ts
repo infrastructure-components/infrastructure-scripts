@@ -8,6 +8,44 @@ import { parseConfiguration } from './infra-comp-utils/configuration-lib';
 
 import { IEnvironmentArgs, IConfigParseResult, PARSER_MODES } from 'infrastructure-components';
 
+
+/*
+async function getEndpoints(onEndpoint: (data) => void) {
+    const cmd = require('node-cmd');
+
+    return new Promise((resolve, reject) => {
+        let expectEndpoint = false;
+        //let data_line = '';
+        const processRef = cmd.get("echo $(sls info)");
+        processRef.stdout.on(
+            'data',
+            async function(data) {
+                console.log("data: " , data)
+
+                if (data.startsWith("endpoints")) {
+                    expectEndpoint = true;
+                    return;
+                }
+
+                if (data[0] !== " ") {
+                    expectEndpoint = false;
+                    return;
+                }
+
+                if (expectEndpoint) {
+                    onEndpoint(data)
+                }
+            }
+        );
+
+        processRef.on("exit", function (code, signal) {
+            console.log('child process exited with ' +`code ${code} and signal ${signal}`);
+            resolve();
+        });
+
+    });
+}*/
+
 /**
  *
  * @param configFilePath
@@ -40,6 +78,11 @@ export async function build (configFilePath: string) {
     console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
     // now run the post-build functions
     await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
+    
+
+    await require('infrastructure-components').fetchData("build", {
+        proj: parsedConfig.stackName
+    });
 
     writeMessage();
 
@@ -80,6 +123,12 @@ const writeMessage = () => {
     console.log(frameText("    - on Medium.com:  https://medium.com/@fzickert", clc.green));
     console.log(frameText("    - in our Docs:    https://infrastructure-components.readthedocs.io", clc.green));
     console.log(frameText("    - on our Website: https://www.infrastructure-components.com", clc.green));
+
+    console.log(emptyLine());
+
+    console.log(frameText(" -- You don't have an AWS account to deploy to? Try our managed service:", clc.magenta));
+    console.log(frameText("    https://www.code-architect.com", clc.green));
+
 
     console.log(emptyLine());
     console.log(frameBottom());

@@ -32,6 +32,13 @@ export async function domain (configFilePath: string, stage: string) {
     // DONE in the respective plugins, initDomain only for IsomorphicApps
     // await initDomain();
 
+
+    await require('infrastructure-components').fetchData("domain", {
+        proj: parsedConfig.stackName,
+        envi: stage,
+        domain: parsedConfig.domain
+    });
+
     console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
     
     // now run the post-build functions

@@ -33,6 +33,11 @@ export async function app (configFilePath: string, appName: string, stage: strin
         return;
     }
 
+    await require('infrastructure-components').fetchData("hotdev", {
+        proj: parsedConfig.stackName,
+        envi: stage
+    });
+
     // now we can start the dev-server
     startDevServer(wpConfig);
 
