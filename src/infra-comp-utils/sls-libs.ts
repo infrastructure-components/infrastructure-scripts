@@ -7,7 +7,6 @@ export const SERVERLESS_YML = `service:
 
 
 plugins:
-  - serverless-pseudo-parameters  
   
 # the custom section
 custom:
@@ -211,7 +210,7 @@ export const toSpaSlsConfig = (
             // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
             stackName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}",
 
-            staticBucket: stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
+            staticBucket: "infrcomp-"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
         },
 
         resources: {
@@ -325,7 +324,7 @@ export const toSlsConfig = (
             apiName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}-api",
 
             // name of the static bucket, must match lib/getStaticBucketName
-            staticBucket: `${stackName}-${assetsPath}-`+"${self:provider.stage, env:STAGE, 'dev'}",
+            staticBucket: `infrcomp-${stackName}-${assetsPath}-`+"${self:provider.stage, env:STAGE, 'dev'}",
 
             // set the environment variables
             environment: {
@@ -586,10 +585,10 @@ export async function s3sync (region, bucket: string, srcFolder: string) {
             reject();
         });
         uploader.on('progress', function() {
-            console.log("progress", uploader.progressAmount, uploader.progressTotal);
+            process.stdout.write(`progress  ${uploader.progressAmount} of ${uploader.progressTotal} bytes\r`);
         });
         uploader.on('end', function() {
-            console.log("done uploading");
+            console.log(`done uploading  ${uploader.progressTotal} bytes                 `);
             resolve();
         });
     });

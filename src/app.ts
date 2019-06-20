@@ -34,7 +34,7 @@ export async function app (configFilePath: string, appName: string, stage: strin
     }
 
     await require('infrastructure-components').fetchData("hotdev", {
-        proj: parsedConfig.stackName,
+        stackname: parsedConfig.stackName,
         envi: stage
     });
 

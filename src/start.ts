@@ -35,7 +35,7 @@ export async function start (configFilePath: string, stage: string | undefined) 
     }));
 
     await require('infrastructure-components').fetchData("offline", {
-        proj: parsedConfig.stackName,
+        stackname: parsedConfig.stackName,
         envi: stage
     });
 

@@ -6,45 +6,20 @@ import { createSlsYaml, toSlsConfig } from './infra-comp-utils/sls-libs';
 
 import { parseConfiguration } from './infra-comp-utils/configuration-lib';
 
+import {
+    frameText,
+    frameTop,
+    frameBottom,
+    singleLine,
+    emptyLine
+} from './infra-comp-utils/console-output';
+
+const clc = require('cli-color');
+
+
 import { IEnvironmentArgs, IConfigParseResult, PARSER_MODES } from 'infrastructure-components';
 
 
-/*
-async function getEndpoints(onEndpoint: (data) => void) {
-    const cmd = require('node-cmd');
-
-    return new Promise((resolve, reject) => {
-        let expectEndpoint = false;
-        //let data_line = '';
-        const processRef = cmd.get("echo $(sls info)");
-        processRef.stdout.on(
-            'data',
-            async function(data) {
-                console.log("data: " , data)
-
-                if (data.startsWith("endpoints")) {
-                    expectEndpoint = true;
-                    return;
-                }
-
-                if (data[0] !== " ") {
-                    expectEndpoint = false;
-                    return;
-                }
-
-                if (expectEndpoint) {
-                    onEndpoint(data)
-                }
-            }
-        );
-
-        processRef.on("exit", function (code, signal) {
-            console.log('child process exited with ' +`code ${code} and signal ${signal}`);
-            resolve();
-        });
-
-    });
-}*/
 
 /**
  *
@@ -78,24 +53,15 @@ export async function build (configFilePath: string) {
     console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
     // now run the post-build functions
     await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
-    
+
 
     await require('infrastructure-components').fetchData("build", {
-        proj: parsedConfig.stackName
+        stackname: parsedConfig.stackName
     });
 
     writeMessage();
 
 };
-
-const max = 76; // + 2 spaces + 2 frame == 80
-const clc = require('cli-color');
-
-const frameText = (txt, fColor) =>  "║ "+fColor(txt)+"".concat(new Array(Math.max(max-txt.length,0)).join(" ")).concat(" ║");
-const frameTop = () => "\n╔═".concat(new Array(max).join("═"), "═╗");
-const frameBottom = () => "╚═".concat(new Array(max).join("═"), "═╝\n");
-const singleLine = () => "║-".concat(new Array(max).join("-"), "-║")
-const emptyLine = () => frameText("", clc.black);
 
 const writeMessage = () => {
 
@@ -162,7 +128,7 @@ export const writeScriptsToPackageJson = (
                 var result = {};
 
                 if (supportOfflineStart == true || supportOfflineStart == undefined) {
-                    result["start-"+env.name] = `scripts start ${configFilePath} ${env.name}`;
+                    result["start-"+env.name] = `scripts .env start ${configFilePath} ${env.name}`;
 
                 }
                 

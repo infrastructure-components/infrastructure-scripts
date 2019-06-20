@@ -8,6 +8,15 @@ import { deploySls, s3sync, createSlsYaml, runSlsCmd } from './infra-comp-utils/
 import * as deepmerge from 'deepmerge';
 import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
+import {
+    frameText,
+    frameTop,
+    frameBottom,
+    singleLine,
+    emptyLine
+} from './infra-comp-utils/console-output';
+
+const clc = require('cli-color');
 
 import {
     IConfigParseResult,
@@ -46,6 +55,19 @@ export async function deploy (configFilePath: string, stage: string) {
         console.log ("--- server webpacks done ---")
     }));
 
+    if (parsedConfig.stackType === "SPA") {
+        // now run the web-targets webpacks - SPA-ONLY!
+        await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
+            console.log("wpConfig: ", wpConfig);
+
+            await runWebpack(wpConfig)
+
+            console.log ("--- client webpacks done ---")
+        }));
+
+    }
+
+
     console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
     // now run the post-build functions
     await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
@@ -63,14 +85,17 @@ export async function deploy (configFilePath: string, stage: string) {
 
     const staticBucketName = getStaticBucketName(parsedConfig.stackName, parsedConfig.assetsPath, stage);
 
-    // now run the web-targets webpacks -
-    await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
-        console.log("wpConfig: ", wpConfig);
+    if (parsedConfig.stackType !== "SPA") {
+        // now run the web-targets webpacks - OTHER THAN SPA!
+        await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
+            console.log("wpConfig: ", wpConfig);
 
-        await runWebpack(wpConfig)
+            await runWebpack(wpConfig)
 
-        console.log ("--- client webpacks done ---")
-    }));
+            console.log ("--- client webpacks done ---")
+        }));
+
+    }
 
 
     // copy the client apps to the assets-folder
@@ -84,49 +109,78 @@ export async function deploy (configFilePath: string, stage: string) {
     );
 
 
-    var eps: any = {};
-
-    await runSlsCmd("echo $(sls info)", data => {
-        //console.log("data: " , data);
-
-        eps = data.split(" ").reduce(({inSection, endpoints}, val, idx) => {
-            //console.log("eval: " , val);
-
-            if (inSection && val.indexOf("https://") > -1) {
-                return { inSection: true, endpoints: endpoints.concat(
-                    val.indexOf("{proxy+}") == -1 ? [val] : []
-                )}
-            }
-
-            if (val.startsWith("endpoints:")) {
-                return { inSection: true, endpoints: endpoints }
-            }
-
-            if (val.startsWith("functions:")) {
-                return { inSection: false, endpoints: endpoints }
-            }
-
-            return { inSection: inSection, endpoints: endpoints }
-
-        }, {inSection: false, endpoints: []});
-
-        console.log("endpoints" , eps)
-
-    }, false);
-
-
-    const data = Object.assign({
-        proj: parsedConfig.stackName,
-        envi: stage,
-        domain: parsedConfig.domain
-    }, eps.endpoints.length > 0 ? { endp: eps.endpoints[0]} : {});
-
-    console.log("analytics: " , data);
-
-    await require('infrastructure-components').fetchData("deploy", data);
+    var endpointMsg = undefined;
     
-    if (eps.length > 0) {
-        console.log("Your React-App is now available at: ", eps[0])
+    if (parsedConfig.stackType === "SPA") {
+        await require('infrastructure-components').fetchData("deploy", {
+            stackname: parsedConfig.stackName,
+            envi: stage,
+            domain: parsedConfig.domain,
+            endp: `http://infrcomp-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`
+        });
+
+        endpointMsg = `http://infrcomp-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`;
+
+    } else {
+
+        var endpointUrl = undefined;
+
+        var eps: any = {};
+
+        await runSlsCmd("echo $(sls info)", data => {
+            //console.log("data: " , data);
+
+            eps = data.split(" ").reduce(({inSection, endpoints}, val, idx) => {
+                //console.log("eval: " , val);
+
+                if (inSection && val.indexOf("https://") > -1) {
+                    return { inSection: true, endpoints: endpoints.concat(
+                        val.indexOf("{proxy+}") == -1 ? [val] : []
+                    )}
+                }
+
+                if (val.startsWith("endpoints:")) {
+                    return { inSection: true, endpoints: endpoints }
+                }
+
+                if (val.startsWith("functions:")) {
+                    return { inSection: false, endpoints: endpoints }
+                }
+
+                return { inSection: inSection, endpoints: endpoints }
+
+            }, {inSection: false, endpoints: []});
+
+            //console.log("endpoints" , eps)
+
+        }, false);
+
+
+        const data = Object.assign({
+            stackname: parsedConfig.stackName,
+            envi: stage,
+            domain: parsedConfig.domain
+        }, eps.endpoints.length > 0 ? { endp: eps.endpoints[0]} : {});
+
+        await require('infrastructure-components').fetchData("deploy", data);
+
+        if (eps.endpoints.length > 0) {
+            endpointMsg = eps.endpoints[0];
+        }
+    }
+    
+    if (endpointMsg !== undefined) {
+
+        console.log(frameTop());
+        console.log(emptyLine());
+        console.log(frameText("Your deployment is complete!", clc.magenta.bold));
+        console.log(emptyLine());
+
+        console.log(frameText("Your React-App is now available at:", clc.magenta));
+        console.log(frameText(endpointMsg, clc.green));
+
+        console.log(emptyLine());
+        console.log(frameBottom());
     }
 
 };

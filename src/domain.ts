@@ -34,7 +34,7 @@ export async function domain (configFilePath: string, stage: string) {
 
 
     await require('infrastructure-components').fetchData("domain", {
-        proj: parsedConfig.stackName,
+        stackname: parsedConfig.stackName,
         envi: stage,
         domain: parsedConfig.domain
     });
