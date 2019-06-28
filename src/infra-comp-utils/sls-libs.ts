@@ -493,7 +493,8 @@ export async function slsLogin (stackname: string) {
         accessKey: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     } : parseCredentials(await require('infrastructure-components').fetchData("login", {
-        stackname: stackname
+        stackname: stackname,
+        cacredential: process.env.CODE_ARCHITECT_ACCESS
     }));
 
     require('child_process').exec(`sls config credentials -o --provider aws --key ${accessKey} --secret ${secretAccessKey}`,
