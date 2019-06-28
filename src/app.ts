@@ -69,7 +69,13 @@ export function startDevServer(wpConfig) {
     <html>
       <head>
         <meta charset="utf-8" />
-        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <style>
+            body {
+                display: block;
+                margin: 0px;
+            }
+         </style>
       </head>
       <body >
         <div id="root" />‚
