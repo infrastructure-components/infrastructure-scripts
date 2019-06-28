@@ -25,6 +25,7 @@ import {
 } from 'infrastructure-components';
 
 
+
 /**
  * uses the current serverless.yml (created by previous build!) to deploy the stack
  *
@@ -74,7 +75,7 @@ export async function deploy (configFilePath: string, stage: string) {
 
 
     // start the sls-config
-    await deploySls();
+    await deploySls(parsedConfig.stackName);
 
 
     /* we can use the stage-arg here, because this is supposed to be the name of the environment anyway!

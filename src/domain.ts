@@ -30,8 +30,8 @@ export async function domain (configFilePath: string, stage: string) {
 
     // start the sls-config
     // DONE in the respective plugins, initDomain only for IsomorphicApps
-    // await initDomain();
-
+    // await initDomain(parsedConfig.stackName);
+    
 
     await require('infrastructure-components').fetchData("domain", {
         stackname: parsedConfig.stackName,

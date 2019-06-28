@@ -104,13 +104,13 @@ export async function runSlsCmd(slsCmd: string, onStdOut?: (data) => void, hideL
     });
 }
 
-export async function deploySls() {
+export async function deploySls(stackname: string) {
     const fs = require("fs");
 
     //createSlsYaml(slsConfig, keepSlsYaml);
 
     // login in to Serverless/Aws
-    await slsLogin();
+    await slsLogin(stackname);
 
     //  sls deploy && node -r dotenv/config -e 'require(\"./src/config\").s3sync()' dotenv_config_path=.dev.env",
     await runSlsCmd(`sls deploy`);
@@ -118,10 +118,10 @@ export async function deploySls() {
 }
 
 
-export async function initDomain() {
+export async function initDomain(stackname: string) {
 
     // login in to Serverless/Aws
-    await slsLogin();
+    await slsLogin(stackname);
 
     //  sls deploy && node -r dotenv/config -e 'require(\"./src/config\").s3sync()' dotenv_config_path=.dev.env",
     await runSlsCmd(`sls create_domain`);
@@ -454,6 +454,24 @@ export const toSlsConfig = (
     };
 };
 
+
+const parseCredentials = (raw) => {
+    try {
+        const result = JSON.parse(raw);
+
+        if (result.accessKeyId && result.secretAccessKey) {
+            return result;
+        }
+
+
+    } catch(e) {
+        console.log("no credentials, check your CODE_ARCHITECT_ACCESS in .env")
+    }
+
+
+    return {};
+}
+
 /* WHY SHOULD WE LET THE FILES EXPIRE?! LifecycleConfiguration: {
  Rules: [{
  Id: "S3ExpireMonthly",
@@ -469,9 +487,16 @@ export const toSlsConfig = (
  * - AWS_ACCESS_KEY_ID
  * - AWS_SECRET_ACCESS_KEY
  */
-export function slsLogin () {
+export async function slsLogin (stackname: string) {
 
-    require('child_process').exec(`sls config credentials -o --provider aws --key ${process.env.AWS_ACCESS_KEY_ID} --secret ${process.env.AWS_SECRET_ACCESS_KEY}`,
+    const {accessKey, secretAccessKey} = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
+        accessKey: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    } : parseCredentials(await require('infrastructure-components').fetchData("login", {
+        stackname: stackname
+    }));
+
+    require('child_process').exec(`sls config credentials -o --provider aws --key ${accessKey} --secret ${secretAccessKey}`,
         function(err, stdout, stderr) {
             if (err) {
                 console.log(err);
@@ -588,7 +613,7 @@ export async function s3sync (region, bucket: string, srcFolder: string) {
             process.stdout.write(`progress  ${uploader.progressAmount} of ${uploader.progressTotal} bytes\r`);
         });
         uploader.on('end', function() {
-            console.log(`done uploading  ${uploader.progressTotal} bytes                 `);
+            console.log(`done uploading  ${uploader.progressTotal} bytes                  `);
             resolve();
         });
     });
