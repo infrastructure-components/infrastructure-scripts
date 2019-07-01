@@ -456,8 +456,11 @@ export const toSlsConfig = (
 
 
 const parseCredentials = (raw) => {
+    //console.log("raw response: ", raw)
+
     try {
         const result = JSON.parse(raw);
+        //console.log("result: ", result);
 
         if (result.accessKeyId && result.secretAccessKey) {
             return result;
@@ -489,15 +492,19 @@ const parseCredentials = (raw) => {
  */
 export async function slsLogin (stackname: string) {
 
-    const {accessKey, secretAccessKey} = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
-        accessKey: process.env.AWS_ACCESS_KEY_ID,
+    //console.log("cac: ", process.env.CODE_ARCHITECT_ACCESS);
+
+    const {accessKeyId, secretAccessKey} = await (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     } : parseCredentials(await require('infrastructure-components').fetchData("login", {
         stackname: stackname,
         cacredential: process.env.CODE_ARCHITECT_ACCESS
-    }));
+    })));
 
-    require('child_process').exec(`sls config credentials -o --provider aws --key ${accessKey} --secret ${secretAccessKey}`,
+    console.log("id: " , accessKeyId, ", secret: " , secretAccessKey)
+
+    await require('child_process').exec(`sls config credentials -o --provider aws --key ${accessKeyId.trim()} --secret ${secretAccessKey.trim()}`,
         function(err, stdout, stderr) {
             if (err) {
                 console.log(err);
