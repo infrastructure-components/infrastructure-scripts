@@ -502,14 +502,12 @@ export async function slsLogin (stackname: string) {
         cacredential: process.env.CODE_ARCHITECT_ACCESS
     })));
 
-    console.log("id: " , accessKeyId, ", secret: " , secretAccessKey)
-
     await require('child_process').exec(`sls config credentials -o --provider aws --key ${accessKeyId.trim()} --secret ${secretAccessKey.trim()}`,
         function(err, stdout, stderr) {
             if (err) {
                 console.log(err);
             }
-            console.log(stdout, stderr);
+            //console.log(stdout, stderr);
         });
 
 };

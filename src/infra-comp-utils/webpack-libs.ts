@@ -102,6 +102,7 @@ export const createClientWebpackConfig = (
                 net: "empty",
                 tls: "empty",
                 child_process: "empty",
+                dns: "empty"
             }
         }
     );
