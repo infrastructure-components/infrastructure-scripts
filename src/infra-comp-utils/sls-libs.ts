@@ -1,10 +1,12 @@
 import { YamlEditor } from '../yaml-edit';
 
+export const SLS_PATH = "./node_modules/.bin/serverless";
+
+
 /**
  * Basic serveless.yml frame
  */
 export const SERVERLESS_YML = `service:
-
 
 plugins:
   
@@ -113,7 +115,7 @@ export async function deploySls(stackname: string) {
     await slsLogin(stackname);
 
     //  sls deploy && node -r dotenv/config -e 'require(\"./src/config\").s3sync()' dotenv_config_path=.dev.env",
-    await runSlsCmd(`sls deploy`);
+    await runSlsCmd(`${SLS_PATH} deploy`);
 
 }
 
@@ -124,7 +126,7 @@ export async function initDomain(stackname: string) {
     await slsLogin(stackname);
 
     //  sls deploy && node -r dotenv/config -e 'require(\"./src/config\").s3sync()' dotenv_config_path=.dev.env",
-    await runSlsCmd(`sls create_domain`);
+    await runSlsCmd(`${SLS_PATH} create_domain`);
 
 }
 
@@ -502,7 +504,7 @@ export async function slsLogin (stackname: string) {
         cacredential: process.env.CODE_ARCHITECT_ACCESS
     })));
 
-    await require('child_process').exec(`sls config credentials -o --provider aws --key ${accessKeyId.trim()} --secret ${secretAccessKey.trim()}`,
+    await require('child_process').exec(`${SLS_PATH} config credentials -o --provider aws --key ${accessKeyId.trim()} --secret ${secretAccessKey.trim()}`,
         function(err, stdout, stderr) {
             if (err) {
                 console.log(err);
