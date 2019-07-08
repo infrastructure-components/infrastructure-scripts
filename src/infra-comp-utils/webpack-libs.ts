@@ -186,10 +186,10 @@ export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
 
 
         if (webpackConfig.resolve !== undefined) {
-            webpackConfig.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx', ]; //'.json'
+            webpackConfig.resolve.extensions = ['.js', '.jsx', '.ts', '.tsx', '.css' ]; //'.json'
         } else {
             webpackConfig.resolve = {
-                extensions: ['.js', '.jsx', '.ts', '.tsx',]
+                extensions: ['.js', '.jsx', '.ts', '.tsx', '.css']
             };
         }
 
@@ -277,11 +277,12 @@ export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
                 },*/
                 {
                     test: /\.css$/,
-                    include: /node_modules/,
+                    include: /(node_modules|src)/,
                     /*the style loader does not work server-side, thus using css-loader only*/
-                    use: target === "node" ?
+                    loader: target === "node" ?
                         [require.resolve('css-loader')] :
-                        [require.resolve('style-loader'), require.resolve('css-loader')]
+                        [require.resolve('style-loader'), require.resolve('css-loader')],
+
                 }, {
                     test: /\.(png|woff|woff2|eot|ttf|svg)$/,
                     loader: require.resolve('url-loader')
