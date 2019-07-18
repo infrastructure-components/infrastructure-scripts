@@ -470,7 +470,7 @@ const parseCredentials = (raw) => {
 
 
     } catch(e) {
-        console.log("no credentials, check your CODE_ARCHITECT_ACCESS in .env")
+        console.log("no credentials, check your stackname and check your CODE_ARCHITECT_ACCESS in .env")
     }
 
 
@@ -494,15 +494,19 @@ const parseCredentials = (raw) => {
  */
 export async function slsLogin (stackname: string) {
 
-    //console.log("cac: ", process.env.CODE_ARCHITECT_ACCESS);
+    //console.log("cac: ",  process.env.AWS_ACCESS_KEY_ID,  process.env.CODE_ARCHITECT_ACCESS);
 
-    const {accessKeyId, secretAccessKey} = await (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    } : parseCredentials(await require('infrastructure-components').fetchData("login", {
-        stackname: stackname,
-        cacredential: process.env.CODE_ARCHITECT_ACCESS
-    })));
+    
+    
+    const {accessKeyId, secretAccessKey} = await (
+        process.env.CODE_ARCHITECT_ACCESS !== undefined ? 
+            parseCredentials(await require('infrastructure-components').fetchData("login", {
+                stackname: stackname,
+                cacredential: process.env.CODE_ARCHITECT_ACCESS
+            })) : {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        });
 
     await require('child_process').exec(`${SLS_PATH} config credentials -o --provider aws --key ${accessKeyId.trim()} --secret ${secretAccessKey.trim()}`,
         function(err, stdout, stderr) {
