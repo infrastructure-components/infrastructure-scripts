@@ -90,11 +90,11 @@ const writeMessage = () => {
     console.log(frameText("    - in our Docs:    https://infrastructure-components.readthedocs.io", clc.green));
     console.log(frameText("    - on our Website: https://www.infrastructure-components.com", clc.green));
 
-    console.log(emptyLine());
+    /*console.log(emptyLine());
 
     console.log(frameText(" -- You don't have an AWS account to deploy to? Try our managed service:", clc.magenta));
     console.log(frameText("    https://www.code-architect.com", clc.green));
-
+    */
 
     console.log(emptyLine());
     console.log(frameBottom());
