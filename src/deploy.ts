@@ -56,7 +56,7 @@ export async function deploy (configFilePath: string, stage: string) {
         console.log ("--- server webpacks done ---")
     }));
 
-    if (parsedConfig.stackType === "SPA") {
+    if (parsedConfig.stackType === "SPA" ) {
         // now run the web-targets webpacks - SPA-ONLY!
         await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
             console.log("wpConfig: ", wpConfig);
@@ -69,50 +69,22 @@ export async function deploy (configFilePath: string, stage: string) {
     }
 
 
-    console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
-    // now run the post-build functions
-    await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
+    if (parsedConfig.stackType !== "SOA" ) {
+        console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
+        // now run the post-build functions
+        await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
+
+    }
 
 
     // start the sls-config
     await deploySls(parsedConfig.stackName);
 
-
-    /* we can use the stage-arg here, because this is supposed to be the name of the environment anyway!
-    const env = Array.isArray(parsedConfig.environments) && parsedConfig.environments.length > 0 ?
-        parsedConfig.environments[0] : parsedConfig.environments;
-
-    env !== undefined && env.name !== undefined ? env.name :*/
-
-    const staticBucketName = getStaticBucketName(parsedConfig.stackName, parsedConfig.assetsPath, stage);
-
-    if (parsedConfig.stackType !== "SPA") {
-        // now run the web-targets webpacks - OTHER THAN SPA!
-        await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
-            console.log("wpConfig: ", wpConfig);
-
-            await runWebpack(wpConfig)
-
-            console.log ("--- client webpacks done ---")
-        }));
-
-    }
-
-
-    // copy the client apps to the assets-folder
-    console.log("start S3 Sync");
-
-    await Promise.all(
-        // only copy webapps
-        parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
-            await s3sync(parsedConfig.region, staticBucketName, path.join(parsedConfig.buildPath, wpConfig.name))
-        })
-    );
-
-
+    // we can now retrieve the endpoints
     var endpointMsg = undefined;
-    
-    if (parsedConfig.stackType === "SPA") {
+    var serviceEndpoints = undefined;
+
+    if (parsedConfig.stackType === "SPA" || parsedConfig.stackType === "SOA") {
         await require('infrastructure-components').fetchData("deploy", {
             stackname: parsedConfig.stackName,
             envi: stage,
@@ -122,7 +94,9 @@ export async function deploy (configFilePath: string, stage: string) {
 
         endpointMsg = `http://infrcomp-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`;
 
-    } else {
+    }
+
+    if (parsedConfig.stackType !== "SPA") {
 
         var endpointUrl = undefined;
 
@@ -166,9 +140,63 @@ export async function deploy (configFilePath: string, stage: string) {
         await require('infrastructure-components').fetchData("deploy", data);
 
         if (eps.endpoints.length > 0) {
-            endpointMsg = eps.endpoints[0];
+            // the ServiceOrientedApp already has an endpoint, but it also has services
+            if (endpointMsg !== undefined) {
+                serviceEndpoints = eps.endpoints;
+            } else {
+                endpointMsg = eps.endpoints[0];
+            }
+
+
         }
     }
+    /// end of retrieving the endpoints!
+    
+    
+
+    /* we can use the stage-arg here, because this is supposed to be the name of the environment anyway!
+    const env = Array.isArray(parsedConfig.environments) && parsedConfig.environments.length > 0 ?
+        parsedConfig.environments[0] : parsedConfig.environments;
+
+    env !== undefined && env.name !== undefined ? env.name :*/
+
+    const staticBucketName = getStaticBucketName(parsedConfig.stackName, parsedConfig.assetsPath, stage);
+
+    if (parsedConfig.stackType !== "SPA") {
+        // now run the web-targets webpacks - OTHER THAN SPA!
+        await Promise.all(parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
+            console.log("wpConfig: ", wpConfig);
+
+            await runWebpack(wpConfig)
+
+            console.log ("--- client webpacks done ---")
+        }));
+
+    }
+
+    //for SOA, we need to provide the endoints into the build of the client,
+    // we need to run the post-scripts after the web-target webpacks!
+    if (parsedConfig.stackType === "SOA" ) {
+        console.log(`SOA: running ${parsedConfig.postBuilds.length} postscripts...`);
+        // now run the post-build functions
+        await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild({serviceEndpoints: serviceEndpoints})));
+    }
+
+
+
+
+    // copy the client apps to the assets-folder
+    console.log("start S3 Sync");
+
+    await Promise.all(
+        // only copy webapps
+        parsedConfig.webpackConfigs.filter(wpConfig => wpConfig.target === "web").map(async wpConfig => {
+            await s3sync(parsedConfig.region, staticBucketName, path.join(parsedConfig.buildPath, wpConfig.name))
+        })
+    );
+
+
+    
     
     if (endpointMsg !== undefined) {
 
@@ -179,8 +207,15 @@ export async function deploy (configFilePath: string, stage: string) {
 
         console.log(frameText("Your React-App is now available at:", clc.magenta));
         console.log(frameText(endpointMsg, clc.green));
-
         console.log(emptyLine());
+
+        if (serviceEndpoints !== undefined) {
+            console.log(frameText("Your App has the following services:", clc.magenta));
+            serviceEndpoints.forEach(endpoint => console.log(frameText(" - "+endpoint, clc.green)))
+
+            console.log(emptyLine());
+        }
+
         console.log(frameBottom());
     }
 

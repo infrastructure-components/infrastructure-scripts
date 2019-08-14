@@ -43,8 +43,12 @@ export async function app (configFilePath: string, appName: string, stage: strin
 
 }
 
-
-export function startDevServer(wpConfig) {
+/**
+ *
+ * @param wpConfig
+ * @param basename (optional) use in SOA to pass the base-url of the services endpoint
+ */
+export function startDevServer(wpConfig, basename=undefined) {
     const path = require('path');
     const express = require('express');
     const webpack = require('webpack');
@@ -79,6 +83,9 @@ export function startDevServer(wpConfig) {
       </head>
       <body >
         <div id="root" />‚
+        <script>
+            ${basename !== undefined ? `window.__BASENAME__ ="${basename}"` : ""};
+        </script>
         <script src="${bundlePath}"></script>
       </body>
     </html>

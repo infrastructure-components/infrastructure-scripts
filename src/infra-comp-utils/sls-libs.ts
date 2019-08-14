@@ -135,7 +135,7 @@ export async function initDomain(stackname: string) {
  *
  * @param ssrConfigPath path to a module that exports [[ServerSideRenderingConfig]]
  */
-export async function startSlsOffline (keepSlsYaml: boolean) {
+export async function startSlsOffline (keepSlsYaml: boolean, port = undefined, runSync = true) {
 
     const fs = require("fs");
 
@@ -146,15 +146,30 @@ export async function startSlsOffline (keepSlsYaml: boolean) {
 
     //createSlsYaml(slsConfig, keepSlsYaml);
 
-    await runSlsCmd(`sls offline start`, async (data) => {
-        if (!keepSlsYaml && data.indexOf("Serverless: Offline listening") >= 0 && await existsSlsYml()) {
-            fs.unlink('serverless.yml', function (err) {
-                if (err) throw err;
-                console.log('serverless.yml removed...');
-            });
 
-        }
-    })
+
+    if (runSync) {
+        await runSlsCmd(`sls offline start ${port !== undefined ? `--port ${port}` : ""}`, async (data) => {
+            if (!keepSlsYaml && data.indexOf("Serverless: Offline listening") >= 0 && await existsSlsYml()) {
+                fs.unlink('serverless.yml', function (err) {
+                    if (err) throw err;
+                    console.log('serverless.yml removed...');
+                });
+
+            }
+        })
+    } else {
+        runSlsCmd(`sls offline start ${port !== undefined ? `--port ${port}` : ""}`, async (data) => {
+            if (!keepSlsYaml && data.indexOf("Serverless: Offline listening") >= 0 && await existsSlsYml()) {
+                fs.unlink('serverless.yml', function (err) {
+                    if (err) throw err;
+                    console.log('serverless.yml removed...');
+                });
+
+            }
+        })
+    }
+
 
     /*
     await new Promise((resolve, reject) => {
@@ -451,6 +466,153 @@ export const toSlsConfig = (
                             StageName: "${self:provider.stage, env:STAGE, 'dev'}"
                     }
                 }
+            }
+        }
+    };
+};
+
+
+
+/**
+ * Creates a Serverless-configuration of an Isomorphic App
+ */
+export const toSoaSlsConfig = (
+    stackName: string,
+    serverName: string,
+    buildPath: string,
+    assetsPath: string,
+    region: string,
+    services: Array<any>
+    ) => {
+
+    console.log("toSoaSlsConfig");
+
+    const path = require ('path');
+
+    return {
+        service: {
+            // it is allowed to use env-variables, but don't forget to specify them
+            // e.g. "${env:CLOUDSTACKNAME}-${env:STAGE}"
+            name: stackName
+        },
+
+        custom: {
+            stage: "${self:provider.stage, env:STAGE, 'dev'}"
+        },
+
+        package: {
+            include: [
+                `${buildPath}/**/*`
+            ],
+
+            exclude: [
+                ".infrastructure_temp/**/*",
+                "build/main/**/*"
+            ]
+        },
+
+        functions: {
+            server: {
+                // index.default refers to the default export of the file
+                // this requires the server entry point to export as default:
+                // `export default serverless(createServer());`
+                handler: path.join(buildPath, serverName, serverName+".default"),
+                events: [
+                    {http: "'ANY {proxy+}'"},
+                    {cors: "true"},
+                ].concat(services.map(service => {
+                    console.log("map service: " , service)
+                    return { http: `'${service.method} ${service.path}'`}
+                }),)
+            }
+
+        },
+
+        // TODO put these values into the Environment-Object
+
+        provider: {
+            // set stage to environment variables
+            //stage: "${env:STAGE}", done through the environment!
+
+            // # take the region from the environment variables
+            region: region, //"${env:AWS_REGION}",
+
+            // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
+            stackName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}",
+
+            // Use a custom name for the API Gateway API
+            apiName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}-api",
+
+            // name of the static bucket, must match lib/getStaticBucketName
+            staticBucket: "infrcomp-"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
+
+            // set the environment variables
+            environment: {
+                // set the STAGE_PATH environment variable to the same we use during the build process
+                STAGE: "${self:provider.stage, env:STAGE, 'dev'}",
+                STAGE_PATH: "${self:provider.stage_path, env:STAGE_PATH, ''}",
+                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.stage, env:STAGE, \'dev\'}" ] ]  }'
+
+            },
+
+            // specifies the rights of the lambda-execution role
+            iamRoleStatements: [
+                {
+                    //let the technical user read from S3
+                    Effect: "Allow",
+                    Action: [ "s3:Get*", "s3:List*"],
+                    Resource: "\"*\""
+                }
+            ]
+        },
+
+        resources: {
+            Resources: {
+                // Bucket of the client side webapp files (bundle.js...)
+                StaticBucket: {
+                    Type: "AWS::S3::Bucket",
+                    Properties: {
+                        // the bucket name is the combination of the cloudstackname, a minus, and the name of the assetsdir
+                        BucketName: "${self:provider.staticBucket}",
+                        AccessControl: "PublicRead",
+                        WebsiteConfiguration: {
+                            IndexDocument: "index.html"
+                        },
+
+                        CorsConfiguration: {
+                            CorsRules: [{
+                                AllowedMethods: ['GET'],
+                                AllowedOrigins: ['"*"'],
+                                AllowedHeaders: ['"*"']
+                            }]
+
+                        }
+
+
+                    }
+                },
+
+                StaticBucketPolicy: {
+                    Type: "AWS::S3::BucketPolicy",
+                    Properties: {
+                        Bucket: {
+                            Ref: "StaticBucket"
+                        },
+                        PolicyDocument: {
+                            Statement: {
+                                Sid: "PublicReadGetObject",
+                                Effect: "Allow",
+                                Principal: '"*"',
+                                Action: ["s3:GetObject"],
+                                Resource: {
+                                    "Fn::Join": "[\"\", [\"arn:aws:s3:::\", {\"Ref\": \"StaticBucket\" }, \"/*\"]]"
+                                }
+
+
+                            }
+                        }
+                    }
+                },
             }
         }
     };
