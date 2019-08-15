@@ -51,9 +51,13 @@ export async function build (configFilePath: string) {
     }));
 
     console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
-    // now run the post-build functions
-    await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
 
+    // now run the post-build functions
+    if (parsedConfig.stackType !== "SOA" ) {
+        await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild()));
+    } else {
+        await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild({serviceEndpoints: ["localhost:3001"]})));
+    }
 
     await require('infrastructure-components').fetchData("build", {
         stackname: parsedConfig.stackName
