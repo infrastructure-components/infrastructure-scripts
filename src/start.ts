@@ -51,7 +51,7 @@ export async function start (configFilePath: string, stage: string | undefined) 
     } else {
 
         // run slsOffline asynchronically
-        startSlsOffline(true, 3001, false)
+        startSlsOffline(true, undefined, false); //3001,
 
         console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
         // now run the post-build functions
