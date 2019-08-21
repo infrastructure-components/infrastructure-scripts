@@ -2,7 +2,7 @@
 import { prepareConfiguration, loadStaticConfiguration } from './infra-comp-utils/configuration-lib';
 import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
-import { createSlsYaml, toSlsConfig } from './infra-comp-utils/sls-libs';
+import { createSlsYaml, toSlsConfig, runSlsCmd, SLS_PATH } from './infra-comp-utils/sls-libs';
 
 import { parseConfiguration } from './infra-comp-utils/configuration-lib';
 
@@ -26,6 +26,8 @@ import { IEnvironmentArgs, IConfigParseResult, PARSER_MODES } from 'infrastructu
  * @param configFilePath
  */
 export async function build (configFilePath: string) {
+
+    await runSlsCmd(`${SLS_PATH} dynamodb install`)
 
     // load and parse the configuration from the temporary folder
     // when building, we do not provide a stage - this should run the environments in build mode (considering all of them)

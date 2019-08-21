@@ -78,6 +78,9 @@ export function existsSlsYml () {
 export async function runSlsCmd(slsCmd: string, onStdOut?: (data) => void, hideLog?: boolean) {
     const cmd = require('node-cmd');
 
+    // maybe use "nodemon": "^1.19.1",
+
+
     return new Promise((resolve, reject) => {
         let data_line = '';
         const processRef = cmd.get(slsCmd);
