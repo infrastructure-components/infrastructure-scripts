@@ -48,7 +48,7 @@ export async function app (configFilePath: string, appName: string, stage: strin
  * @param wpConfig
  * @param basename (optional) use in SOA to pass the base-url of the services endpoint
  */
-export function startDevServer(wpConfig, basename=undefined) {
+export function startDevServer(wpConfig, basename=undefined, localUrl=undefined) {
     const path = require('path');
     const express = require('express');
     const webpack = require('webpack');
@@ -68,7 +68,7 @@ export function startDevServer(wpConfig, basename=undefined) {
     console.log("path: ", bundlePath);
     // serve a basic html with the app.bundle.js
     app.get('/', (req, res) => {
-        return res.send(`
+        return localUrl !== undefined ? res.sendFile(localUrl) : res.send(`
 <!doctype html>
     <html>
       <head>

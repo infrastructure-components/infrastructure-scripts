@@ -4,13 +4,13 @@
  */
 
 
-//import { loadConfiguration, complementWebpackConfig, startDevServer } from './libs';
 import { ConfigTypes, IConfigParseResult, PARSER_MODES } from 'infrastructure-components';
 import {runWebpack} from "./infra-comp-utils/webpack-libs";
 import { startDevServer } from './app';
 
 import {createSlsYaml, startSlsOffline} from './infra-comp-utils/sls-libs';
 import {parseConfiguration} from "./infra-comp-utils/configuration-lib";
+import {currentAbsolutePath} from "./infra-comp-utils/system-libs";
 
 
 
@@ -55,10 +55,20 @@ export async function start (configFilePath: string, stage: string | undefined) 
 
         console.log(`running ${parsedConfig.postBuilds.length} postscripts...`);
         // now run the post-build functions
-        await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild({serviceEndpoints: ["localhost:3001"]})));
+        await Promise.all(parsedConfig.postBuilds.map(async postBuild => await postBuild({serviceEndpoints: ["http://localhost:3001"]})));
 
 
-        startDevServer(parsedConfig.webpackConfigs[0], "http://localhost:3001");
+        const path = require('path');
+
+        //console.log("parsedConfig: ", parsedConfig)
+
+        // we provide the localUrl==index.html to use the template created by the SoaPlugin
+        startDevServer(parsedConfig.webpackConfigs[0], "http://localhost:3001",
+            path.resolve(
+                currentAbsolutePath(),
+                parsedConfig.buildPath, parsedConfig.stackName, "index.html"
+            )
+        );
 
     }
 }
