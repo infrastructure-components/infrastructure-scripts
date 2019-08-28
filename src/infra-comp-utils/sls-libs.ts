@@ -520,13 +520,13 @@ export const toSoaSlsConfig = (
                 // this requires the server entry point to export as default:
                 // `export default serverless(createServer());`
                 handler: path.join(buildPath, serverName, serverName+".default"),
-                events: [
-                    {http: "'ANY {proxy+}'"},
-                    {cors: "true"},
-                ].concat(services.map(service => {
+                events: [].concat(services.map(service => {
                     console.log("map service: " , service)
                     return { http: `'${service.method} ${service.path}'`}
-                }),)
+                }),[
+                    {http: "'ANY {proxy+}'"},
+                    {cors: "true"},
+                ])
             }
 
         },
