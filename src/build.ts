@@ -27,7 +27,7 @@ import { IEnvironmentArgs, IConfigParseResult, PARSER_MODES } from 'infrastructu
  */
 export async function build (configFilePath: string) {
 
-    await runSlsCmd(`${SLS_PATH} dynamodb install`)
+    await runSlsCmd(`${SLS_PATH} plugin install --name serverless-dynamodb-local`);
 
     // load and parse the configuration from the temporary folder
     // when building, we do not provide a stage - this should run the environments in build mode (considering all of them)
