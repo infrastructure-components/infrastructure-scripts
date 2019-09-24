@@ -1,13 +1,15 @@
 {
   "name": "infrastructure-scripts",
-  "version": "0.2.13",
+  "version": "0.2.14-alpha.12",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "postinstall": "icscriptsinstall"
   },
   "bin": {
-    "scripts": "./scripts/index.js"
+    "scripts": "./scripts/index.js",
+    "icscriptsinstall": "./scripts/icscriptsinstall.js"
   },
   "repository": {
     "type": "git",
