@@ -230,7 +230,10 @@ export const toSpaSlsConfig = (
             // we take the custom name of the CloudFormation stack from the environment variable: `CLOUDSTACKNAME`
             stackName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}",
 
-            staticBucket: "infrcomp-"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
+            accountId: '"infrcomp-#{AWS::AccountId}-"',
+
+            staticBucket: "${self:provider.accountId}"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
+            //"infrcomp-${AWS::AccountId}-"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
         },
 
         resources: {
@@ -343,8 +346,10 @@ export const toSlsConfig = (
             // Use a custom name for the API Gateway API
             apiName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}-api",
 
+            accountId:'"infrcomp-#{AWS::AccountId}-"',
+
             // name of the static bucket, must match lib/getStaticBucketName
-            staticBucket: `infrcomp-${stackName}-${assetsPath}-`+"${self:provider.stage, env:STAGE, 'dev'}",
+            staticBucket: "${self:provider.accountId}"+stackName+"-"+assetsPath+"-${self:provider.stage, env:STAGE, 'dev'}",
 
             // set the environment variables
             environment: {
@@ -546,8 +551,11 @@ export const toSoaSlsConfig = (
             // Use a custom name for the API Gateway API
             apiName: "${self:service.name}-${self:provider.stage, env:STAGE, 'dev'}-api",
 
+            accountId: '"infrcomp-#{AWS::AccountId}-"',
+
             // name of the static bucket, must match lib/getStaticBucketName
-            staticBucket: "infrcomp-"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
+            staticBucket: "${self:provider.accountId}"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
+            //"infrcomp-"+stackName+"-${self:provider.stage, env:STAGE, 'dev'}",
 
             // set the environment variables
             environment: {
@@ -735,6 +743,44 @@ export async function invalidateCloudFrontCache (domain: string | undefined) {
 
 };
 
+export async function getAccountIDUsingAccessKey() {
+
+    return new Promise( async function (resolve, reject) {
+
+        const AWS = require("aws-sdk");
+        const stsService = new AWS.STS({
+            apiVersion: '2011-06-15',
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        });
+
+        var params = {
+        };
+
+        var result = undefined;
+
+        await stsService.getCallerIdentity(params, function(err, data) {
+            if (err) {
+                // an error occurred
+                console.log(err, err.stack);
+                reject();
+            } else {
+                //console.log("get Account data: ", data);           // successful response
+                resolve(data["Account"]);
+            }
+
+            /*
+             data = {
+             Account: "123456789012",
+             Arn: "arn:aws:sts::123456789012:federated-user/my-federated-user-name",
+             UserId: "123456789012:my-federated-user-name"
+             }
+             */
+        });
+
+    });
+}
+
 
 /**
  * uploads the static assets (compiled client) to the S3-bucket of the current stage
@@ -750,6 +796,8 @@ export async function invalidateCloudFrontCache (domain: string | undefined) {
  * - STAGE
  */
 export async function s3sync (region, bucket: string, srcFolder: string) {
+
+
 
     return new Promise((resolve, reject) => {
         var client = require('s3-node-client').createClient({

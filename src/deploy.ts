@@ -4,7 +4,7 @@
  */
 
 import { parseConfiguration } from './infra-comp-utils/configuration-lib';
-import { deploySls, s3sync, createSlsYaml, runSlsCmd } from './infra-comp-utils/sls-libs';
+import { deploySls, s3sync, getAccountIDUsingAccessKey, createSlsYaml, runSlsCmd } from './infra-comp-utils/sls-libs';
 import * as deepmerge from 'deepmerge';
 import {runWebpack} from "./infra-comp-utils/webpack-libs";
 
@@ -80,6 +80,12 @@ export async function deploy (configFilePath: string, stage: string) {
     // start the sls-config
     await deploySls(parsedConfig.stackName);
 
+
+    const accountId = await getAccountIDUsingAccessKey();
+    //console.log("accountId: ", accountId);
+    const staticBucketName = getStaticBucketName(accountId, parsedConfig.stackName, parsedConfig.assetsPath, stage);
+
+
     // we can now retrieve the endpoints
     var endpointMsg = undefined;
     var serviceEndpoints = undefined;
@@ -89,10 +95,10 @@ export async function deploy (configFilePath: string, stage: string) {
             stackname: parsedConfig.stackName,
             envi: stage,
             domain: parsedConfig.domain,
-            endp: `http://infrcomp-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`
+            endp: `http://infrcomp-${staticBucketName}-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`
         });
 
-        endpointMsg = `http://infrcomp-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`;
+        endpointMsg = `http://infrcomp-${staticBucketName}-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`;
 
     }
 
@@ -160,7 +166,6 @@ export async function deploy (configFilePath: string, stage: string) {
 
     env !== undefined && env.name !== undefined ? env.name :*/
 
-    const staticBucketName = getStaticBucketName(parsedConfig.stackName, parsedConfig.assetsPath, stage);
 
     if (parsedConfig.stackType !== "SPA") {
         // now run the web-targets webpacks - OTHER THAN SPA!
