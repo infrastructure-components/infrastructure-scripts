@@ -286,6 +286,10 @@ export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
                 }, {
                     test: /\.(png|woff|woff2|eot|ttf|svg)$/,
                     loader: require.resolve('url-loader')
+                }, {
+                    test: /\....$/,
+                    exclude: /\.(mjs|ts|tsx|js|jsx|css|png|woff|woff2|eot|ttf|svg)$/,
+                    loader: require.resolve('file-loader')
                 }
             ]
         };
