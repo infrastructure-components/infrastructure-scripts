@@ -95,10 +95,10 @@ export async function deploy (configFilePath: string, stage: string) {
             stackname: parsedConfig.stackName,
             envi: stage,
             domain: parsedConfig.domain,
-            endp: `http://infrcomp-${staticBucketName}-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`
+            endp: `http://${staticBucketName}.s3-website-${parsedConfig.region}.amazonaws.com`
         });
 
-        endpointMsg = `http://infrcomp-${staticBucketName}-${parsedConfig.stackName}-${stage}.s3-website-${parsedConfig.region}.amazonaws.com`;
+        endpointMsg = `http://${staticBucketName}.s3-website-${parsedConfig.region}.amazonaws.com`;
 
     }
 

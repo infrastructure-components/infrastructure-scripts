@@ -19,6 +19,7 @@ package:
 provider:
   name: aws
   runtime: nodejs10.x
+  timeout: 120
   
 functions:
 

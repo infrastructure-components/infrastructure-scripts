@@ -1,6 +1,6 @@
 {
   "name": "infrastructure-scripts",
-  "version": "0.3.1-alpha.17",
+  "version": "0.3.1-alpha.22",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -50,7 +50,7 @@
     "express": "^4.17.1",
     "file-loader": "^3.0.1",
     "html-webpack-plugin": "^3.2.0",
-    "infrastructure-components": "^0.3.0",
+    "infrastructure-components": "^0.3.1-alpha.20",
     "node-cmd": "^3.0.0",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
@@ -64,6 +64,7 @@
     "serverless-dynamodb-local": "^0.2.38",
     "serverless-http": "^1.10.1",
     "serverless-pseudo-parameters": "^2.5.0",
+    "serverless-s3-local": "^0.5.3",
     "serverless-single-page-app-plugin": "^1.0.2",
     "serverless-webpack": "^5.3.1",
     "source-map-loader": "^0.2.4",

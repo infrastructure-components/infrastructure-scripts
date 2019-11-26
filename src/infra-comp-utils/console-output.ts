@@ -3,7 +3,7 @@
  */
 
 
-const max = 76; // + 2 spaces + 2 frame == 80
+const max = 86; // + 2 spaces + 2 frame == 90
 const clc = require('cli-color');
 
 export const frameText = (txt, fColor) =>  "║ "+fColor(txt)+"".concat(new Array(Math.max(max-txt.length,0)).join(" ")).concat(" ║");
