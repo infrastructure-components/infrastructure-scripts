@@ -456,7 +456,10 @@ export const toSlsConfig = (
                             },
                             IntegrationHttpMethod: "ANY",
                                 Type: "HTTP_PROXY",
-                                Uri: "https://s3-"+region+".amazonaws.com/${self:provider.staticBucket}/{proxy}",
+                                //Uri: "https://s3-"+region+".amazonaws.com/${self:provider.staticBucket}/{proxy}",
+                                Uri: "https://${self:provider.staticBucket}.s3" + (
+                                    region === "us-east-1" ? "":"-${self:provider.region}"
+                                ) +".amazonaws.com/{proxy}",
                                 PassthroughBehavior: "WHEN_NO_MATCH",
                                 IntegrationResponses: [{
                                 StatusCode: 200
