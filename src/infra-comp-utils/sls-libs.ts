@@ -357,7 +357,7 @@ export const toSlsConfig = (
                 // set the STAGE_PATH environment variable to the same we use during the build process
                 STAGE: "${self:provider.stage, env:STAGE, 'dev'}",
                 STAGE_PATH: "${self:provider.stage_path, env:STAGE_PATH, ''}",
-                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.stage, env:STAGE, \'dev\'}" ] ]  }'
+                DOMAIN_URL: '{ "Fn::Join" : ["", ["https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.stage, env:STAGE, \'dev\'}" ] ]  }'
 
             },
 
@@ -566,7 +566,7 @@ export const toSoaSlsConfig = (
                 // set the STAGE_PATH environment variable to the same we use during the build process
                 STAGE: "${self:provider.stage, env:STAGE, 'dev'}",
                 STAGE_PATH: "${self:provider.stage_path, env:STAGE_PATH, ''}",
-                DOMAIN_URL: '{ "Fn::Join" : ["", [" https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.stage, env:STAGE, \'dev\'}" ] ]  }'
+                DOMAIN_URL: '{ "Fn::Join" : ["", ["https://#{ApiGatewayRestApi}", ".execute-api.'+region+'.amazonaws.com/${self:provider.stage, env:STAGE, \'dev\'}" ] ]  }'
 
             },
 
