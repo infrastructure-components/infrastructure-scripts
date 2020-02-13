@@ -82,10 +82,8 @@ export function startDevServer(wpConfig, basename=undefined, localUrl=undefined)
          </style>
       </head>
       <body >
-        <div id="root" />‚
-        <script>
-            ${basename !== undefined ? `window.__BASENAME__ ="${basename}"` : ""};
-        </script>
+        <div id="root" />
+        <script>${basename !== undefined ? `window.__BASENAME__ ="${basename}";` : ""}</script>
         <script src="${bundlePath}"></script>
       </body>
     </html>
