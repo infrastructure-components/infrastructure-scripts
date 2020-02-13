@@ -78,6 +78,7 @@ export function startDevServer(wpConfig, basename=undefined, localUrl=undefined)
             html, body, #root {
                 display: block;
                 margin: 0px;
+                height: 100%;
             }
          </style>
       </head>
