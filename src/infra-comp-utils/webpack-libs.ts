@@ -283,6 +283,16 @@ export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
                         [require.resolve('css-loader')] :
                         [require.resolve('style-loader'), require.resolve('css-loader')],
 
+                },{
+                    test: /\.s[ac]ss$/i,
+                    loader: target === "node" ? [require.resolve('css-loader'), require.resolve('sass-loader')] : [
+                        // Creates `style` nodes from JS strings
+                        require.resolve('style-loader'),
+                        // Translates CSS into CommonJS
+                        require.resolve('css-loader'),
+                        // Compiles Sass to CSS
+                        require.resolve('sass-loader'),
+                    ],
                 }, {
                     test: /\.(png|woff|woff2|eot|ttf|svg)$/,
                     loader: require.resolve('url-loader')
