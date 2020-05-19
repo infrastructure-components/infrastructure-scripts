@@ -285,13 +285,11 @@ export function complementWebpackConfig(webpackConfig: any, isProd?: boolean) {
 
                 },{
                     test: /\.s[ac]ss$/i,
-                    loader: target === "node" ? [require.resolve('css-loader'), require.resolve('sass-loader')] : [
+                    loader: target === "node" ? [require.resolve('css-loader')] : [
                         // Creates `style` nodes from JS strings
                         require.resolve('style-loader'),
                         // Translates CSS into CommonJS
                         require.resolve('css-loader'),
-                        // Compiles Sass to CSS
-                        require.resolve('sass-loader'),
                     ],
                 }, {
                     test: /\.(png|woff|woff2|eot|ttf|svg)$/,
