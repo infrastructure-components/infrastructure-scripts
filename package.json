@@ -60,7 +60,7 @@
     "rimraf": "^2.7.1",
     "s3-node-client": "^4.4.4",
     "sass-loader": "^8.0.2",
-    "serverless": "^1.61.3",
+    "serverless": "^3.25.1",
     "serverless-domain-manager": "^3.3.1",
     "serverless-dynamodb-local": "^0.2.38",
     "serverless-http": "^1.10.1",
